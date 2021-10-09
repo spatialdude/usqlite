@@ -10,6 +10,10 @@
 
 //------------------------------------------------------------------------------
 
+typedef struct _usqlite_cursor_t usqlite_cursor_t;
+
+typedef mp_obj_t(*usqlite_rowfactory_t)(usqlite_cursor_t*);
+
 typedef struct _usqlite_cursor_t 
 {
     mp_obj_base_t           base;
@@ -17,6 +21,7 @@ typedef struct _usqlite_cursor_t
     sqlite3_stmt*           stmt;
     int                     rc;
     int                     rowcount;
+    usqlite_rowfactory_t    rowfactory;
 }
 usqlite_cursor_t;
 

@@ -1,0 +1,81 @@
+#include "usqlite_row.h"
+#include "usqlite_utils.h"
+
+#include "py/objstr.h"
+#include "py/objtuple.h"
+
+
+//------------------------------------------------------------------------------
+
+void usqlite_row_type_initialize()
+{
+    static initialized = 0;
+
+    if (initialized)
+    {
+        return;
+    }
+
+    usqlite_row_type.make_new = mp_type_tuple.make_new;
+    usqlite_row_type.locals_dict = mp_type_tuple.locals_dict;
+
+    initialized = 1;
+}
+
+//------------------------------------------------------------------------------
+
+STATIC mp_obj_t keys(usqlite_cursor_t* cursor)
+{
+    int columns = sqlite3_data_count(cursor->stmt);
+
+    mp_obj_tuple_t* o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
+    o->base.type = &mp_type_tuple;
+    o->len = columns;
+
+    for (int i = 0; i < columns; i++)
+    {
+        o->items[i] = usqlite_column_name(cursor->stmt, i);
+    }
+
+    return MP_OBJ_FROM_PTR(o);
+}
+
+//------------------------------------------------------------------------------
+
+STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
+{
+    if (dest[0] == MP_OBJ_NULL)
+    {
+        if ((usqlite_lookup(self_in, attr, dest)))
+        {
+            return;
+        }
+
+        mp_obj_tuple_t* self = (mp_obj_tuple_t*)self_in;
+
+        switch (attr)
+        {
+        case MP_QSTR_keys:
+            dest[0] = keys(self->items[self->len]);
+            break;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------
+
+mp_obj_type_t usqlite_row_type = 
+{
+    { &mp_type_type },
+    .name = MP_QSTR_Row,
+    .print = mp_obj_tuple_print,
+    .make_new = NULL,
+    .unary_op = mp_obj_tuple_unary_op,
+    .binary_op = mp_obj_tuple_binary_op,
+    .subscr = mp_obj_tuple_subscr,
+    .getiter = mp_obj_tuple_getiter,
+    .locals_dict = NULL,
+    .attr = usqlite_row_attr
+};
+
+//------------------------------------------------------------------------------

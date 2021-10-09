@@ -16,6 +16,7 @@ STATIC mp_obj_t usqlite_connection_make_new(const mp_obj_type_t* type, size_t n_
 
     self->base.type = &usqlite_connection_type;
     self->db = (sqlite3*)MP_OBJ_TO_PTR(args[0]);
+    self->row_type = MP_QSTR_tuple;
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -117,17 +118,33 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_executemany_obj, usqlite_con
 
 STATIC void usqlite_connection_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
 {
+    usqlite_connection_t* self = (usqlite_connection_t*)self_in;
+
     if (dest[0] == MP_OBJ_NULL)
     {
         if ((usqlite_lookup(self_in, attr, dest)))
         {
             return;
         }
+
+        switch (attr)
+        {
+        case MP_QSTR_row_type:
+            dest[0] = MP_OBJ_NEW_QSTR(self->row_type);
+            break;
+        }
     }
-    else
+    else if (dest[1] != MP_OBJ_NULL)
     {
+        switch (attr)
+        {
+        case MP_QSTR_row_type:
+            self->row_type = mp_obj_str_get_qstr(dest[1]);
+            dest[0] = MP_OBJ_NULL;
+            break;
+        }
+
         // delete/store attribute
-        dest[0] = MP_OBJ_NULL; // indicate success
     }
 }
 
@@ -169,7 +186,7 @@ const mp_obj_type_t usqlite_connection_type =
     .print = usqlite_connection_print,
     .make_new = usqlite_connection_make_new,
     .locals_dict = (mp_obj_dict_t*)&usqlite_connection_locals_dict,
-    //.attr = usqlite_connection_attr,
+    .attr = usqlite_connection_attr,
 };
 
 //------------------------------------------------------------------------------

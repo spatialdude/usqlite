@@ -1,7 +1,9 @@
 #include "usqlite_cursor.h"
+#include "usqlite_row.h"
 #include "usqlite_utils.h"
 
 #include "py/objstr.h"
+#include "py/objtuple.h"
 
 //------------------------------------------------------------------------------
 
@@ -9,16 +11,38 @@ STATIC mp_obj_t usqlite_cursor_close(mp_obj_t self_in);
 STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in);
 STATIC mp_obj_t usqlite_cursor_executemany(mp_obj_t self_in, mp_obj_t sql_in);
 
+STATIC mp_obj_t row_tuple(usqlite_cursor_t* cursor);
+STATIC mp_obj_t row_dict(usqlite_cursor_t* cursor);
+STATIC mp_obj_t row_type(usqlite_cursor_t* cursor);
+
 //------------------------------------------------------------------------------
 
 STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t* type, size_t n_args, size_t n_kw, const mp_obj_t* args)
 {
+    usqlite_row_type_initialize();
+
     usqlite_cursor_t* self = m_new_obj(usqlite_cursor_t);
 
     memset(self, 0, sizeof(usqlite_cursor_t));
 
     self->base.type = &usqlite_cursor_type;
     self->connection = (usqlite_connection_t*)MP_OBJ_TO_PTR(args[0]);
+
+    switch (self->connection->row_type)
+    {
+    case MP_QSTR_row:
+        self->rowfactory = row_type;
+        break;
+
+    case MP_QSTR_dict:
+        self->rowfactory = row_dict;
+        break;
+
+    case MP_QSTR_tuple:
+    default:
+        self->rowfactory = row_tuple;
+        break;
+    }
 
     if (n_args > 2)
     {
@@ -193,15 +217,15 @@ STATIC mp_obj_t usqlite_cursor_getiter(mp_obj_t self_in, mp_obj_iter_buf_t* iter
 
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t row_dict(sqlite3_stmt* stmt)
+STATIC mp_obj_t row_dict(usqlite_cursor_t* cursor)
 {
-    int columns = sqlite3_data_count(stmt);
+    int columns = sqlite3_data_count(cursor->stmt);
 
     mp_obj_t dict = mp_obj_new_dict(columns);
 
     for (int i = 0; i < columns; i++)
     {
-        mp_obj_dict_store(dict, usqlite_column_name(stmt, i), usqlite_column_value(stmt, i));
+        mp_obj_dict_store(dict, usqlite_column_name(cursor->stmt, i), usqlite_column_value(cursor->stmt, i));
     }
 
     return dict;
@@ -209,9 +233,9 @@ STATIC mp_obj_t row_dict(sqlite3_stmt* stmt)
 
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t row_tuple(sqlite3_stmt* stmt)
+STATIC mp_obj_t row_tuple(usqlite_cursor_t* cursor)
 {
-    int columns = sqlite3_data_count(stmt);
+    int columns = sqlite3_data_count(cursor->stmt);
 
     mp_obj_tuple_t* o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
     o->base.type = &mp_type_tuple;
@@ -219,7 +243,27 @@ STATIC mp_obj_t row_tuple(sqlite3_stmt* stmt)
 
     for (int i = 0; i < columns; i++)
     {
-        o->items[i] = usqlite_column_value(stmt, i);
+        o->items[i] = usqlite_column_value(cursor->stmt, i);
+    }
+
+    return MP_OBJ_FROM_PTR(o);
+}
+
+//------------------------------------------------------------------------------
+
+STATIC mp_obj_t row_type(usqlite_cursor_t* cursor)
+{
+    int columns = sqlite3_data_count(cursor->stmt);
+
+    mp_obj_tuple_t* o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns + 1);
+    o->base.type = &usqlite_row_type;
+    o->len = columns;
+
+    o->items[columns] = MP_OBJ_FROM_PTR(cursor);
+
+    for (int i = 0; i < columns; i++)
+    {
+        o->items[i] = usqlite_column_value(cursor->stmt, i);
     }
 
     return MP_OBJ_FROM_PTR(o);
@@ -231,7 +275,7 @@ STATIC mp_obj_t usqlite_cursor_iternext(mp_obj_t self_in)
 {
     usqlite_cursor_t* self = MP_OBJ_TO_PTR(self_in);
     mp_obj_t result = self->rc == SQLITE_ROW
-        ? row_tuple(self->stmt)
+        ? self->rowfactory(self)
         : MP_OBJ_STOP_ITERATION;
 
 
@@ -288,7 +332,6 @@ STATIC mp_obj_t usqlite_cursor_description(sqlite3_stmt* stmt)
 
 //------------------------------------------------------------------------------
 
-
 STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
 {
     usqlite_cursor_t* self = MP_OBJ_TO_PTR(self_in);
@@ -311,10 +354,9 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
             break;
         }
     }
-    else
+    else if (dest[1] != MP_OBJ_NULL)
     {
-        // delete/store attribute
-        dest[0] = MP_OBJ_NULL; // indicate success
+        //dest[0] = MP_OBJ_NULL; // indicate success
     }
 }
 

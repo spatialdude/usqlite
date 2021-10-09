@@ -12,6 +12,8 @@ typedef struct _usqlite_connection_t
 {
     mp_obj_base_t   base;
     sqlite3*        db;
+    qstr            row_type;
+    mp_obj_t        row_factory;
 } 
 usqlite_connection_t;
 
