@@ -2,7 +2,7 @@
 add_library(usermod_usqlite INTERFACE)
 
 # Add our source files to the lib
-target_sources(usermod_sqlite3 INTERFACE
+target_sources(usermod_usqlite INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_module.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_connection.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_cursor.c
@@ -10,7 +10,7 @@ target_sources(usermod_sqlite3 INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_file.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_vfs.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_utils.c
-    ${CMAKE_CURRENT_LIST_DIR}/sqlite3.c
+    ${CMAKE_CURRENT_LIST_DIR}/usqlite.c
 )
 
 # Add the current directory as an include directory.

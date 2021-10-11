@@ -1,6 +1,4 @@
-#include "usqlite_connection.h"
-#include "usqlite_cursor.h"
-#include "usqlite_utils.h"
+#include "usqlite.h"
 
 #include "py/objstr.h"
 
@@ -36,11 +34,11 @@ STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in)
 {
     usqlite_connection_t* self = (usqlite_connection_t*)MP_OBJ_TO_PTR(self_in);
 
-    //usqlite_logprintf(__FUNCDNAME__ "\n");
+    //usqlite_logprintf(___FUNC___ "\n");
 
     if (self->db)
     {
-        usqlite_logprintf(__FUNCDNAME__ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
+        usqlite_logprintf(___FUNC___ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
         sqlite3_close(self->db);
         self->db = NULL;
     }
@@ -54,7 +52,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_close_obj, usqlite_connection_close
 
 STATIC mp_obj_t usqlite_connection_del(mp_obj_t self_in)
 {
-    usqlite_logprintf(__FUNCDNAME__, "\n");
+    usqlite_logprintf(___FUNC___, "\n");
 
     usqlite_connection_close(self_in);
 
@@ -152,7 +150,7 @@ STATIC void usqlite_connection_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
 
 STATIC mp_obj_t usqlite_connection_exit(size_t n_args, const mp_obj_t* args)
 {
-    usqlite_logprintf(__FUNCDNAME__ "\n");
+    usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_connection_close(args[0]);
 

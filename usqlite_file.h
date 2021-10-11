@@ -3,8 +3,6 @@
 
 //------------------------------------------------------------------------------
 
-#include "sqlite3.h"
-
 #include "py/obj.h"
 
 //------------------------------------------------------------------------------
@@ -21,7 +19,7 @@ typedef struct _MPFILE
 MPFILE;
 
 //------------------------------------------------------------------------------
-
+void usqlite_file_initialize();
 int usqlite_file_open(MPFILE* file, const char* name, int flags);
 int usqlite_file_close(MPFILE* file);
 int usqlite_file_read(MPFILE* file, void* pBuf, int nBuf);

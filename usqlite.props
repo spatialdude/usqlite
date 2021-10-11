@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <usqliteDir>$(PyBaseDir)\..\modules\usqlite</usqliteDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="$(usqliteDir)\usqlite.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite.h" />
+    <ClInclude Include="$(usqliteDir)\usqlite_config.h" />
+    <ClCompile Include="$(usqliteDir)\usqlite_vfs.c" />
+    <ClCompile Include="$(usqliteDir)\usqlite_file.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite_file.h" />
+    <ClCompile Include="$(usqliteDir)\usqlite_utils.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite_utils.h" />
+    <ClCompile Include="$(usqliteDir)\usqlite_module.c" />
+    <ClCompile Include="$(usqliteDir)\usqlite_connection.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite_connection.h" />
+    <ClCompile Include="$(usqliteDir)\usqlite_cursor.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite_cursor.h" />
+    <ClCompile Include="$(usqliteDir)\usqlite_row.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite_row.h" />
+  </ItemGroup>
+</Project>

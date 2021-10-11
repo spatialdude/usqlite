@@ -4,8 +4,6 @@
 #include "py/runtime.h"
 #include "py/obj.h"
 
-#include "sqlite3.h"
-
 //------------------------------------------------------------------------------
 
 typedef struct _usqlite_connection_t 

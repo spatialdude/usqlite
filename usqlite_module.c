@@ -5,9 +5,7 @@
 
 #include "string.h"
 
-#include "usqlite_config.h"
-#include "usqlite_utils.h"
-#include "usqlite_connection.h"
+#include "usqlite.h"
 
 //------------------------------------------------------------------------------
 
@@ -29,9 +27,32 @@ STATIC const mp_rom_obj_tuple_t sqlite_version_info = {
 
 //------------------------------------------------------------------------------
 
+#ifdef SQLITE_ZERO_MALLOC
+static mp_obj_t sqlite_heap;
+#endif
+
+//------------------------------------------------------------------------------
+
 STATIC mp_obj_t usqlite_init(void)
 {
-    usqlite_logprintf("usqlite_init\n");
+    LOGFUNC;
+    //usqlite_logprintf("usqlite_init\n");
+
+#ifdef SQLITE_ZERO_MALLOC
+    usqlite_logprintf("zero malloc heap: %d\n", HEAP_SIZE);
+
+    void* heap = m_malloc(HEAP_SIZE);
+    if (!heap)
+    {
+        mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("Failed to alloc heap: %d"), HEAP_SIZE);
+        return mp_const_none;
+    }
+
+    LOGLINE;
+    sqlite_heap = MP_OBJ_FROM_PTR(heap);
+    sqlite3_config(SQLITE_CONFIG_HEAP, heap, HEAP_SIZE, 0);
+    LOGLINE;
+#endif
 
 #ifdef SQLITE_OMIT_AUTOINIT
     int rc = sqlite3_initialize();
@@ -55,17 +76,21 @@ STATIC mp_obj_t usqlite_connect(mp_obj_t filename)
 
     if (!pFilename || !strlen(pFilename))
     {
-        mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Empty filename"));
+        mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Empty filename"));
         return mp_const_none;
     }
 
+    usqlite_logprintf(___FUNC___ " filename: '%s'\n", pFilename);
+
     sqlite3* db = NULL;
-    int result = sqlite3_open(pFilename, &db);
-    if (result)
+    int rc = sqlite3_open(pFilename, &db);
+    if (rc)
     {
-        mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("sqlite3 error %d opening '%s'"), result, pFilename);
+        mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("error %d:%s opening '%s'"), rc, sqlite3_errstr(rc), pFilename);
         return mp_const_none;
     }
+
+    usqlite_logprintf(___FUNC___ " connected: '%s'\n", pFilename);
 
     mp_obj_t args[1] =
     {
@@ -81,13 +106,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);
 
 STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
 {
-    { MP_ROM_QSTR(MP_QSTR___name__),            MP_ROM_QSTR(MP_QSTR_sqlite) },
-    { MP_ROM_QSTR(MP_QSTR___init__),            MP_ROM_PTR(&usqlite_init_obj) },
+    { MP_ROM_QSTR(MP_QSTR___name__),                MP_ROM_QSTR(MP_QSTR_usqlite) },
+    { MP_ROM_QSTR(MP_QSTR___init__),                MP_ROM_PTR(&usqlite_init_obj) },
 
-    { MP_ROM_QSTR(MP_QSTR_sqlite_version),      MP_ROM_PTR(&sqlite_version) },
-    { MP_ROM_QSTR(MP_QSTR_sqlite_version_info), MP_ROM_PTR(&sqlite_version_info) },
+    { MP_ROM_QSTR(MP_QSTR_sqlite_version),          MP_ROM_PTR(&sqlite_version) },
+    { MP_ROM_QSTR(MP_QSTR_sqlite_version_info),     MP_ROM_PTR(&sqlite_version_info) },
+    { MP_ROM_QSTR(MP_QSTR_sqlite_version_number),   MP_ROM_INT(SQLITE_VERSION_NUMBER) },
 
-    { MP_ROM_QSTR(MP_QSTR_connect),             MP_ROM_PTR(&usqlite_connect_obj) },
+    { MP_ROM_QSTR(MP_QSTR_connect),                 MP_ROM_PTR(&usqlite_connect_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(usqlite_module_globals, usqlite_module_globals_table);

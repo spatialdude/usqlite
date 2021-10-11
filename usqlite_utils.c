@@ -1,12 +1,18 @@
 //------------------------------------------------------------------------------
 
+#include "usqlite.h"
+
 #include <stdarg.h>
 
 #include "py/runtime.h"
 #include "py/builtin.h"
 #include "py/objexcept.h"
 
-#include "usqlite_utils.h"
+#include "string.h"
+
+//------------------------------------------------------------------------------
+
+//extern const struct _mp_print_t mp_stderr_print;
 
 //------------------------------------------------------------------------------
 
@@ -23,7 +29,8 @@ int usqlite_errprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = mp_vprintf(&mp_stderr_print, fmt, ap);
+    int ret = mp_vprintf(&mp_plat_print, fmt, ap);
+//    int ret = mp_vprintf(&mp_stderr_print, fmt, ap);
     va_end(ap);
     return ret;
 }
@@ -111,7 +118,7 @@ mp_obj_t usqlite_column_value(sqlite3_stmt* stmt, int column)
         return mp_obj_new_float(sqlite3_column_double(stmt, column));
 
     case SQLITE_TEXT:
-        return mp_obj_new_str(sqlite3_column_text(stmt, column), sqlite3_column_bytes(stmt, column));
+        return mp_obj_new_str((const char*)sqlite3_column_text(stmt, column), sqlite3_column_bytes(stmt, column));
 
     case SQLITE_BLOB:
         return mp_obj_new_bytes(sqlite3_column_blob(stmt, column), sqlite3_column_bytes(stmt, column));

@@ -6,8 +6,6 @@
 
 #include "usqlite_connection.h"
 
-#include "sqlite3.h"
-
 //------------------------------------------------------------------------------
 
 typedef struct _usqlite_cursor_t usqlite_cursor_t;

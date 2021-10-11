@@ -1,15 +1,13 @@
-#include "usqlite_row.h"
-#include "usqlite_utils.h"
+#include "usqlite.h"
 
 #include "py/objstr.h"
 #include "py/objtuple.h"
-
 
 //------------------------------------------------------------------------------
 
 void usqlite_row_type_initialize()
 {
-    static initialized = 0;
+    static int initialized = 0;
 
     if (initialized)
     {

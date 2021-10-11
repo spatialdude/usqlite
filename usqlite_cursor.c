@@ -1,6 +1,4 @@
-#include "usqlite_cursor.h"
-#include "usqlite_row.h"
-#include "usqlite_utils.h"
+#include "usqlite.h"
 
 #include "py/objstr.h"
 #include "py/objtuple.h"
@@ -69,13 +67,13 @@ STATIC void usqlite_cursor_print(const mp_print_t* print, mp_obj_t self_in, mp_p
 
 STATIC mp_obj_t usqlite_cursor_close(mp_obj_t self_in)
 {
-    //usqlite_logprintf(__FUNCDNAME__ "\n");
+    //usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_cursor_t* self = (usqlite_cursor_t*)MP_OBJ_TO_PTR(self_in);
 
     if (self->stmt)
     {
-        usqlite_logprintf(__FUNCDNAME__ " closing: '%s'\n", sqlite3_sql(self->stmt));
+        usqlite_logprintf(___FUNC___ " closing: '%s'\n", sqlite3_sql(self->stmt));
         sqlite3_finalize(self->stmt);
         self->stmt = NULL;
         self->rowcount = -1;
@@ -208,7 +206,7 @@ STATIC mp_obj_t usqlite_cursor_getiter(mp_obj_t self_in, mp_obj_iter_buf_t* iter
 
     if (!self->stmt)
     {
-        mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("No data"));
+        mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("No iter data"));
         return mp_const_none;
     }
 
@@ -289,7 +287,7 @@ STATIC mp_obj_t usqlite_cursor_iternext(mp_obj_t self_in)
         break;
 
     case SQLITE_DONE:
-        self->rc = sqlite3_reset(self->stmt);
+        //self->rc = sqlite3_reset(self->stmt);
         break;
 
     case SQLITE_ERROR:
@@ -364,7 +362,7 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
 
 STATIC mp_obj_t usqlite_cursor_del(mp_obj_t self_in)
 {
-    usqlite_logprintf(__FUNCDNAME__ "\n");
+    usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_cursor_close(self_in);
 
@@ -377,7 +375,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_del_obj, usqlite_cursor_del);
 
 STATIC mp_obj_t usqlite_cursor_exit(size_t n_args, const mp_obj_t* args)
 {
-    usqlite_logprintf(__FUNCDNAME__ "\n");
+    usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_cursor_close(args[0]);
 

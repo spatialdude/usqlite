@@ -4,7 +4,6 @@
 #define usqlite_utils_h
 
 #include "py/obj.h"
-#include "sqlite3.h"
 
 //------------------------------------------------------------------------------
 

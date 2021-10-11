@@ -1,10 +1,9 @@
 //------------------------------------------------------------------------------
 
-#include "sqlite3.h"
-#include "usqlite_file.h"
-#include "usqlite_utils.h"
+#include "usqlite.h"
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "py/objstr.h"
 #include "py/runtime.h"
@@ -15,6 +14,8 @@
 
 static int mpvfsClose(sqlite3_file* pFile)
 {
+    LOGFUNC;
+
     return usqlite_file_close((MPFILE*)pFile);
 }
 
@@ -22,6 +23,8 @@ static int mpvfsClose(sqlite3_file* pFile)
 
 static int mpvfsRead(sqlite3_file* pFile, void* pBuf, int nBuf, sqlite3_int64 offset)
 {
+    LOGFUNC;
+
     MPFILE* file = (MPFILE*)pFile;
 
     if (usqlite_file_seek(file, offset, MP_SEEK_SET) != offset)
@@ -40,6 +43,8 @@ static int mpvfsRead(sqlite3_file* pFile, void* pBuf, int nBuf, sqlite3_int64 of
 
 static int mpvfsWrite(sqlite3_file* pFile, const void* pBuf, int nBuf, sqlite3_int64 offset)
 {
+    LOGFUNC;
+
     MPFILE* file = (MPFILE*)pFile;
 
     if (usqlite_file_seek(file, offset, MP_SEEK_SET) != offset)
@@ -57,9 +62,11 @@ static int mpvfsWrite(sqlite3_file* pFile, const void* pBuf, int nBuf, sqlite3_i
 
 static int mpvfsTruncate(sqlite3_file* pFile, sqlite3_int64 size)
 {
+    LOGFUNC;
+
     MPFILE* file = (MPFILE*)pFile;
 
-    usqlite_logprintf(__FUNCDNAME__ "%s\n", file->pathname);
+    usqlite_logprintf(___FUNC___ "%s\n", file->pathname);
 
     return SQLITE_OK;
 }
@@ -68,6 +75,8 @@ static int mpvfsTruncate(sqlite3_file* pFile, sqlite3_int64 size)
 
 static int mpvfsSync(sqlite3_file* pFile, int flags)
 {
+    LOGFUNC;
+
     return usqlite_file_flush((MPFILE*)pFile)
         ? SQLITE_ERROR
         : SQLITE_OK;
@@ -77,6 +86,8 @@ static int mpvfsSync(sqlite3_file* pFile, int flags)
 
 static int mpvfsFileSize(sqlite3_file* pFile, sqlite3_int64* pSize)
 {
+    LOGFUNC;
+
     MPFILE* file = (MPFILE*)pFile;
 
     int offset = usqlite_file_tell(file);
@@ -103,6 +114,8 @@ static int mpvfsFileSize(sqlite3_file* pFile, sqlite3_int64* pSize)
 
 static int mpvfsLock(sqlite3_file* pFile, int eLock)
 {
+    LOGFUNC;
+
     return SQLITE_OK;
 }
 
@@ -110,6 +123,8 @@ static int mpvfsLock(sqlite3_file* pFile, int eLock)
 
 static int mpvfsUnlock(sqlite3_file* pFile, int eLock)
 {
+    LOGFUNC;
+
     return SQLITE_OK;
 }
 
@@ -117,6 +132,8 @@ static int mpvfsUnlock(sqlite3_file* pFile, int eLock)
 
 static int mpvfsCheckReservedLock(sqlite3_file* pFile, int* pResOut)
 {
+    LOGFUNC;
+
     *pResOut = 0;
 
     return SQLITE_OK;
@@ -126,6 +143,8 @@ static int mpvfsCheckReservedLock(sqlite3_file* pFile, int* pResOut)
  
 static int mpvfsFileControl(sqlite3_file* pFile, int op, void* pArg)
 {
+    LOGFUNC;
+
     return SQLITE_NOTFOUND;
 }
 
@@ -133,6 +152,8 @@ static int mpvfsFileControl(sqlite3_file* pFile, int op, void* pArg)
 
 static int mpvfsSectorSize(sqlite3_file* pFile)
 {
+    LOGFUNC;
+
     return 0;
 }
 
@@ -140,6 +161,8 @@ static int mpvfsSectorSize(sqlite3_file* pFile)
 
 static int mpvfsDeviceCharacteristics(sqlite3_file* pFile)
 {
+    LOGFUNC;
+
     return 0;
 }
 
@@ -179,6 +202,8 @@ static sqlite3_io_methods mpvfs_io_methods =
 
 static int mpvfsDelete(sqlite3_vfs* vfs, const char* zName, int syncDir)
 {
+    LOGFUNC;
+
     return usqlite_file_delete(zName);
 }
 
@@ -206,6 +231,8 @@ static int mpvfsAccess(sqlite3_vfs* vfs, const char *zName, int flags, int *pRes
 
 static int mpvfsFullPathname(sqlite3_vfs* vfs, const char* zName, int nOut, char* zOut)
 {
+    LOGFUNC;
+
     strcpy(zOut, zName);
 
     return SQLITE_OK;
@@ -224,6 +251,8 @@ static int mpvfsFullPathname(sqlite3_vfs* vfs, const char* zName, int nOut, char
 
 static int mpvfsRandomness(sqlite3_vfs* pVfs, int nByte, char* zByte) 
 {
+    LOGFUNC;
+
     return SQLITE_OK;
 }
 
@@ -242,6 +271,8 @@ static int mpvfsRandomness(sqlite3_vfs* pVfs, int nByte, char* zByte)
 
 static int mpvfsOpen(sqlite3_vfs* vfs, const char* zName, sqlite3_file* pFile, int flags, int* pOutFlags)
 {
+    LOGFUNC;
+
     MPFILE* file = (MPFILE*)pFile;
 
     memset(file, 0, sizeof(MPFILE));
@@ -287,7 +318,9 @@ static sqlite3_vfs mpvfs =
 
 int sqlite3_os_init(void)
 {
-    usqlite_logprintf("sqlite3_os_init\n");
+    LOGFUNC;
+
+    //usqlite_logprintf("sqlite3_os_init\n");
 
     int rc = sqlite3_vfs_register(&mpvfs, 1);
 
@@ -298,77 +331,13 @@ int sqlite3_os_init(void)
 
 int sqlite3_os_end(void)
 {
-    usqlite_logprintf("sqlite3_os_end\n");
-    
+    LOGFUNC;
+
+    //usqlite_logprintf("sqlite3_os_end\n");
+
     return SQLITE_OK;
 }
 
 //------------------------------------------------------------------------------
 
-/*
-
-#if MICROPY_VFS == 1
-#include "extmod/vfs.h"
-#endif
-#if MICROPY_VFS_POSIX_FILE == 1
-#include "extmod/vfs_posix.h"
-#endif
-
-#if MICROPY_VFS_POSIX_FILE == 11
-    mpFile->stream = mp_vfs_posix_file_open(
-        &mp_type_vfs_posix_fileio,
-        mp_obj_new_str(zName, strlen(zName)),
-        mp_obj_new_str("w+b", 3));
-    //        MP_OBJ_NEW_QSTR(MP_QSTR_wrb));
-#endif
-#if MICROPY_VFS == 1
-    mp_obj_t args[2] =
-    {
-        mp_obj_new_str(filename, strlen(filename)),
-        MP_OBJ_NEW_QSTR(MP_QSTR_wb),
-    };
-
-    //    mp_obj_t file = mp_vfs_open(MP_ARRAY_SIZE(args), &args[0], (mp_map_t *)&mp_const_empty_map);
-#endif
-
-
-//    char* filename = "file.txt";
-
-
-#if MICROPY_VFS_POSIX_FILE == 11
-    mp_obj_t file = mp_vfs_posix_file_open(
-        &mp_type_vfs_posix_fileio,
-        mp_obj_new_str(filename, strlen(filename)),
-        MP_OBJ_NEW_QSTR(MP_QSTR_wb));
-#endif
-#if MICROPY_VFS == 11
-    mp_obj_t args[2] =
-    {
-        mp_obj_new_str(filename, strlen(filename)),
-        MP_OBJ_NEW_QSTR(MP_QSTR_wb),
-    };
-
-    //    mp_obj_t file = mp_vfs_open(MP_ARRAY_SIZE(args), &args[0], (mp_map_t *)&mp_const_empty_map);
-#endif
-
-    //mp_stream_write(file, "0123456789", 10, MP_STREAM_RW_WRITE);
-
-    //mp_stream_close(file);
-
-//    int result = sqlite3_initialize();
-//    if (result)
-//    {
-//        errprintf("sqlite3_initialize error %d\n", result);
-//    }
-
-//    sqlite3* db = NULL;
-//    int result = sqlite3_open("test.sqlite", &db);
-
-//    return mp_obj_new_bool(1);// !result);
-
-//    return MP_OBJ_NULL;
-}
-
-
-*/
 

@@ -1,9 +1,9 @@
 //------------------------------------------------------------------------------
 
-#include "usqlite_file.h"
-#include "usqlite_utils.h"
+#include "usqlite.h"
 
 #include "py/objstr.h"
+#include "py/objmodule.h"
 #include "py/runtime.h"
 #include "py/stream.h"
 #include "py/builtin.h"
@@ -12,6 +12,8 @@
 
 int usqlite_file_open(MPFILE* file, const char* pathname, int flags)
 {
+    LOGFUNC;
+
     char mode[8];
     memset(mode, 0, sizeof(mode));
     char* pMode = mode;
@@ -40,14 +42,14 @@ int usqlite_file_open(MPFILE* file, const char* pathname, int flags)
     mp_obj_t filename = mp_obj_new_str(pathname, strlen(pathname));
     mp_obj_t filemode = mp_obj_new_str(mode, strlen(mode));
 
-    usqlite_logprintf(__FUNCDNAME__ " '%s' mode:%s\n", pathname, mode);
+    usqlite_logprintf(___FUNC___ " '%s' mode:%s\n", pathname, mode);
 
     mp_obj_t open = usqlite_method(&mp_module_io, MP_QSTR_open);
     file->stream = mp_call_function_2(open, filename, filemode);
     strcpy(file->pathname, pathname);
     file->flags = flags;
 
-    const mp_stream_p_t* stream = mp_get_stream(file->stream);
+    //const mp_stream_p_t* stream = mp_get_stream(file->stream);
 
     return SQLITE_OK;
 }
@@ -66,9 +68,11 @@ file->stream = mp_builtin_open(2, args, NULL);
 
 int usqlite_file_close(MPFILE* file)
 {
+    LOGFUNC;
+
     if (file->stream)
     {
-        usqlite_logprintf(__FUNCDNAME__ " %s\n", file->pathname);
+        usqlite_logprintf(___FUNC___ " %s\n", file->pathname);
 
         mp_stream_close(file->stream);
         file->stream = NULL;
@@ -86,6 +90,8 @@ int usqlite_file_close(MPFILE* file)
 
 int usqlite_file_read(MPFILE* file, void* pBuf, int nBuf)
 {
+    LOGFUNC;
+
     int error = 0;
     mp_uint_t size = mp_stream_rw(file->stream, pBuf, nBuf, &error, MP_STREAM_RW_READ);
     if (size < 0)
@@ -100,6 +106,8 @@ int usqlite_file_read(MPFILE* file, void* pBuf, int nBuf)
 
 int usqlite_file_write(MPFILE* file, const void* pBuf, int nBuf)
 {
+    LOGFUNC;
+
     int error = 0;
 
     mp_uint_t size = mp_stream_rw(file->stream, (void*)pBuf, nBuf, &error, MP_STREAM_RW_WRITE);
@@ -115,6 +123,8 @@ int usqlite_file_write(MPFILE* file, const void* pBuf, int nBuf)
 
 int usqlite_file_flush(MPFILE* file)
 {
+    LOGFUNC;
+
     const mp_stream_p_t* stream = mp_get_stream(file->stream);
 
     int error;
@@ -133,6 +143,8 @@ int usqlite_file_flush(MPFILE* file)
 
 int usqlite_file_seek(MPFILE* file, int offset, int origin)
 {
+    LOGFUNC;
+
     struct mp_stream_seek_t seek;
 
     seek.offset = offset;
@@ -155,6 +167,8 @@ int usqlite_file_seek(MPFILE* file, int offset, int origin)
 
 int usqlite_file_tell(MPFILE* file)
 {
+    LOGFUNC;
+
     return usqlite_file_seek(file, 0, MP_SEEK_CUR);
 }
 
@@ -162,20 +176,21 @@ int usqlite_file_tell(MPFILE* file)
 
 int usqlite_file_delete(const char* pathname)
 {
-    usqlite_logprintf(__FUNCDNAME__ " delete: %s\n", pathname);
+    LOGFUNC;
+
+    usqlite_logprintf("%s: %s\n", __func__, pathname);
 
     mp_obj_t filename = mp_obj_new_str(pathname, strlen(pathname));
-    mp_obj_t remove = usqlite_method(&mp_module_os, MP_QSTR_remove);
+    mp_obj_t remove = usqlite_method(mp_module_get(MP_QSTR_uos), MP_QSTR_remove);
     mp_call_function_1(remove, filename);
 
     return SQLITE_OK;
 }
 
 //------------------------------------------------------------------------------
-
+/*
 static mp_obj_t fileIoctl(MPFILE* file, size_t n_args, const mp_obj_t* args)
 {
-    /*
     mp_buffer_info_t bufinfo;
     uintptr_t val = 0;
     if (n_args > 2) {
@@ -195,8 +210,8 @@ static mp_obj_t fileIoctl(MPFILE* file, size_t n_args, const mp_obj_t* args)
     }
 
     return mp_obj_new_int(res);
-    */
 }
+*/
 
 //------------------------------------------------------------------------------
 
