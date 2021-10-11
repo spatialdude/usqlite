@@ -27,6 +27,8 @@ usqlite_cursor_t;
 
 extern const mp_obj_type_t usqlite_cursor_type;
 
+mp_obj_t usqlite_cursor_close(mp_obj_t self_in);
+
 //------------------------------------------------------------------------------
 
 #endif

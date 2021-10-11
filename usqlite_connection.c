@@ -15,6 +15,7 @@ STATIC mp_obj_t usqlite_connection_make_new(const mp_obj_type_t* type, size_t n_
     self->base.type = &usqlite_connection_type;
     self->db = (sqlite3*)MP_OBJ_TO_PTR(args[0]);
     self->row_type = MP_QSTR_tuple;
+    mp_obj_list_init(&self->cursors, 0);
 
     return MP_OBJ_FROM_PTR(self);
 }
@@ -32,16 +33,25 @@ STATIC void usqlite_connection_print(const mp_print_t* print, mp_obj_t self_in, 
 
 STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in) 
 {
+    LOGFUNC;
+
     usqlite_connection_t* self = (usqlite_connection_t*)MP_OBJ_TO_PTR(self_in);
-
-    //usqlite_logprintf(___FUNC___ "\n");
-
-    if (self->db)
+    if (!self->db)
     {
-        usqlite_logprintf(___FUNC___ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
-        sqlite3_close(self->db);
-        self->db = NULL;
+        return mp_const_none;
     }
+
+    for (int i = 0; i < self->cursors.len; i++)
+    {
+        mp_obj_t cursor = self->cursors.items[i];
+        self->cursors.items[0] = mp_const_none;
+        usqlite_cursor_close(cursor);
+        m_free(MP_OBJ_TO_PTR(cursor), sizeof(usqlite_cursor_t));
+    }
+
+    usqlite_logprintf(___FUNC___ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
+    sqlite3_close(self->db);
+    self->db = NULL;
 
     return mp_const_none;
 }
@@ -111,6 +121,22 @@ STATIC mp_obj_t usqlite_connection_executemany(mp_obj_t self_in, mp_obj_t sql)
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_executemany_obj, usqlite_connection_executemany);
+
+//------------------------------------------------------------------------------
+
+void usqlite_connection_register(usqlite_connection_t* connection, mp_obj_t cursor)
+{
+    mp_obj_t cursors = MP_OBJ_FROM_PTR(&connection->cursors);
+    mp_obj_list_append(cursors, cursor);
+}
+
+//------------------------------------------------------------------------------
+
+void usqlite_connection_deregister(usqlite_connection_t* connection, mp_obj_t cursor)
+{
+    mp_obj_t cursors = MP_OBJ_FROM_PTR(&connection->cursors);
+    mp_obj_list_remove(cursors, cursor);
+}
 
 //------------------------------------------------------------------------------
 

@@ -5,7 +5,6 @@
 
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_cursor_close(mp_obj_t self_in);
 STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in);
 STATIC mp_obj_t usqlite_cursor_executemany(mp_obj_t self_in, mp_obj_t sql_in);
 
@@ -20,11 +19,14 @@ STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t* type, size_t n_args
     usqlite_row_type_initialize();
 
     usqlite_cursor_t* self = m_new_obj(usqlite_cursor_t);
+    mp_obj_t self_obj = MP_OBJ_FROM_PTR(self);
 
     memset(self, 0, sizeof(usqlite_cursor_t));
 
     self->base.type = &usqlite_cursor_type;
     self->connection = (usqlite_connection_t*)MP_OBJ_TO_PTR(args[0]);
+
+    usqlite_connection_register(self->connection, self_obj);
 
     switch (self->connection->row_type)
     {
@@ -44,14 +46,14 @@ STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t* type, size_t n_args
 
     if (n_args > 2)
     {
-        return usqlite_cursor_executemany(MP_OBJ_FROM_PTR(self), args[1]);
+        return usqlite_cursor_executemany(self_obj, args[1]);
     }
     else if (n_args > 1)
     {
-        return usqlite_cursor_execute(MP_OBJ_FROM_PTR(self), args[1]);
+        return usqlite_cursor_execute(self_obj, args[1]);
     }
 
-    return MP_OBJ_FROM_PTR(self);
+    return self_obj;
 }
 
 //------------------------------------------------------------------------------
@@ -65,20 +67,22 @@ STATIC void usqlite_cursor_print(const mp_print_t* print, mp_obj_t self_in, mp_p
 
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_cursor_close(mp_obj_t self_in)
+mp_obj_t usqlite_cursor_close(mp_obj_t self_in)
 {
+    LOGFUNC;
     //usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_cursor_t* self = (usqlite_cursor_t*)MP_OBJ_TO_PTR(self_in);
-
-    if (self->stmt)
+    if (!self->stmt)
     {
-        usqlite_logprintf(___FUNC___ " closing: '%s'\n", sqlite3_sql(self->stmt));
-        sqlite3_finalize(self->stmt);
-        self->stmt = NULL;
-        self->rowcount = -1;
-        self->rc = SQLITE_OK;
+        return mp_const_none;
     }
+
+    usqlite_logprintf(___FUNC___ " closing: '%s'\n", sqlite3_sql(self->stmt));
+    sqlite3_finalize(self->stmt);
+    self->stmt = NULL;
+    self->rowcount = -1;
+    self->rc = SQLITE_OK;
 
     return mp_const_none;
 }
@@ -362,9 +366,12 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
 
 STATIC mp_obj_t usqlite_cursor_del(mp_obj_t self_in)
 {
+    usqlite_cursor_t* self = MP_OBJ_TO_PTR(self_in);
+
     usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_cursor_close(self_in);
+    usqlite_connection_deregister(self->connection, self_in);
 
     return mp_const_none;
 }
