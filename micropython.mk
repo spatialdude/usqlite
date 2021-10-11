@@ -6,6 +6,7 @@ SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_connection.c
 SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_cursor.c
 SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_row.c
 SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_file.c
+SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_mem.c
 SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_vfs.c
 SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite_utils.c
 SRC_USERMOD += $(EXAMPLE_MOD_DIR)/usqlite.c

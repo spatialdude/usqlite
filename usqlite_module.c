@@ -6,8 +6,22 @@
 #include "string.h"
 
 #include "usqlite.h"
+#include "usqlite_mem.h"
 
 //------------------------------------------------------------------------------
+
+STATIC const MP_DEFINE_STR_OBJ(usqlite_version, USQLITE_VERSION);
+
+STATIC const mp_rom_obj_tuple_t usqlite_version_info = {
+    { &mp_type_tuple },
+    3,
+    {
+        MP_ROM_INT(USQLITE_VERSION_MAJOR),
+        MP_ROM_INT(USQLITE_VERSION_MINOR),
+        MP_ROM_INT(USQLITE_VERSION_MICRO)
+    },
+};
+
 
 STATIC const MP_DEFINE_STR_OBJ(sqlite_version, SQLITE_VERSION);
 
@@ -27,32 +41,12 @@ STATIC const mp_rom_obj_tuple_t sqlite_version_info = {
 
 //------------------------------------------------------------------------------
 
-#ifdef SQLITE_ZERO_MALLOC
-static mp_obj_t sqlite_heap;
-#endif
-
-//------------------------------------------------------------------------------
-
 STATIC mp_obj_t usqlite_init(void)
 {
     LOGFUNC;
     //usqlite_logprintf("usqlite_init\n");
 
-#ifdef SQLITE_ZERO_MALLOC
-    usqlite_logprintf("zero malloc heap: %d\n", HEAP_SIZE);
-
-    void* heap = m_malloc(HEAP_SIZE);
-    if (!heap)
-    {
-        mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("Failed to alloc heap: %d"), HEAP_SIZE);
-        return mp_const_none;
-    }
-
-    LOGLINE;
-    sqlite_heap = MP_OBJ_FROM_PTR(heap);
-    sqlite3_config(SQLITE_CONFIG_HEAP, heap, HEAP_SIZE, 0);
-    LOGLINE;
-#endif
+    usqlite_mem_init();
 
 #ifdef SQLITE_OMIT_AUTOINIT
     int rc = sqlite3_initialize();
@@ -108,6 +102,9 @@ STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
 {
     { MP_ROM_QSTR(MP_QSTR___name__),                MP_ROM_QSTR(MP_QSTR_usqlite) },
     { MP_ROM_QSTR(MP_QSTR___init__),                MP_ROM_PTR(&usqlite_init_obj) },
+
+    { MP_ROM_QSTR(MP_QSTR_version),                 MP_ROM_PTR(&usqlite_version) },
+    { MP_ROM_QSTR(MP_QSTR_version_info),            MP_ROM_PTR(&usqlite_version_info) },
 
     { MP_ROM_QSTR(MP_QSTR_sqlite_version),          MP_ROM_PTR(&sqlite_version) },
     { MP_ROM_QSTR(MP_QSTR_sqlite_version_info),     MP_ROM_PTR(&sqlite_version_info) },

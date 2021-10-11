@@ -13,14 +13,25 @@
 
 #include <string.h>
 
+#define _STRINGIFY(x) #x
+#define STRINGIFY(x) _STRINGIFY(x)
+
+//------------------------------------------------------------------------------
+
+#define USQLITE_VERSION_MAJOR	0
+#define USQLITE_VERSION_MINOR	1
+#define USQLITE_VERSION_MICRO	0
+
+#define USQLITE_VERSION		STRINGIFY(USQLITE_VERSION_MAJOR) "." STRINGIFY(USQLITE_VERSION_MINOR) "." STRINGIFY(USQLITE_VERSION_MICRO)
+
+//------------------------------------------------------------------------------
+
 #undef USQLITE_DEBUGLOG
 
 //------------------------------------------------------------------------------
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
 
-#define ___FILELINE___ "<" __FILE__ ":" TOSTRING(__LINE__) ">"
+#define ___FILELINE___ "<" __FILE__ ":" STRINGIFY(__LINE__) ">"
 
 #ifdef _MSC_VER
 #define ___FUNC___ __FUNCDNAME__ "()"

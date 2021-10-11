@@ -8,6 +8,7 @@ target_sources(usermod_usqlite INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_cursor.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_row.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_file.c
+    ${CMAKE_CURRENT_LIST_DIR}/usqlite_mem.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_vfs.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite_utils.c
     ${CMAKE_CURRENT_LIST_DIR}/usqlite.c

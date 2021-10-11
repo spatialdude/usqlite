@@ -17,6 +17,8 @@
     <ClInclude Include="$(usqliteDir)\usqlite_connection.h" />
     <ClCompile Include="$(usqliteDir)\usqlite_cursor.c" />
     <ClInclude Include="$(usqliteDir)\usqlite_cursor.h" />
+    <ClCompile Include="$(usqliteDir)\usqlite_mem.c" />
+    <ClInclude Include="$(usqliteDir)\usqlite_mem.h" />
     <ClCompile Include="$(usqliteDir)\usqlite_row.c" />
     <ClInclude Include="$(usqliteDir)\usqlite_row.h" />
   </ItemGroup>

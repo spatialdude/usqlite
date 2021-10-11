@@ -12,6 +12,32 @@
 
 //------------------------------------------------------------------------------
 
+static sqlite3_vfs mpvfs;
+
+int sqlite3_os_init(void)
+{
+    LOGFUNC;
+
+    //usqlite_logprintf("sqlite3_os_init\n");
+
+    int rc = sqlite3_vfs_register(&mpvfs, 1);
+
+    return rc;
+}
+
+//------------------------------------------------------------------------------
+
+int sqlite3_os_end(void)
+{
+    LOGFUNC;
+
+    //usqlite_logprintf("sqlite3_os_end\n");
+
+    return SQLITE_OK;
+}
+
+//------------------------------------------------------------------------------
+
 static int mpvfsClose(sqlite3_file* pFile)
 {
     LOGFUNC;
@@ -313,30 +339,6 @@ static sqlite3_vfs mpvfs =
     NULL,//mpvfsSleep,                    /* xSleep */
     NULL,//mpvfsCurrentTime,              /* xCurrentTime */
 };
-
-//------------------------------------------------------------------------------
-
-int sqlite3_os_init(void)
-{
-    LOGFUNC;
-
-    //usqlite_logprintf("sqlite3_os_init\n");
-
-    int rc = sqlite3_vfs_register(&mpvfs, 1);
-
-    return rc;
-}
-
-//------------------------------------------------------------------------------
-
-int sqlite3_os_end(void)
-{
-    LOGFUNC;
-
-    //usqlite_logprintf("sqlite3_os_end\n");
-
-    return SQLITE_OK;
-}
 
 //------------------------------------------------------------------------------
 

@@ -39,11 +39,12 @@
 //------------------------------------------------------------------------------
 
 #ifdef SQLITE_ZERO_MALLOC
-#define SQLITE_ENABLE_MEMSYS5 1
-
-#define HEAP_SIZE		128 * 1024
+//#define SQLITE_ENABLE_MEMSYS5 1
 #endif
 
+#ifdef SQLITE_ENABLE_MEMSYS5
+#define MEMSYS5_HEAP_SIZE		128 * 1024
+#endif
 
 //------------------------------------------------------------------------------
 
