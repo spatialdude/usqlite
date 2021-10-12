@@ -10,9 +10,69 @@
 
 //------------------------------------------------------------------------------
 
+int usqlite_file_exists(const char* pathname)
+{
+    mp_obj_t os = mp_module_get(MP_QSTR_uos);
+    mp_obj_t ilistdir = usqlite_method(os, MP_QSTR_ilistdir);
+
+    char path[MAXPATHNAME + 1];
+    strcpy(path, pathname);
+    const char* filename = pathname;
+
+    char* lastSep = strrchr(path, '/');
+    if (lastSep)
+    {
+        *lastSep++ = 0;
+        filename = lastSep;
+    }
+    else
+    {
+        lastSep = strrchr(path, '\\');
+        if (lastSep)
+        {
+            *lastSep++ = 0;
+            filename;
+        }
+        else
+        {
+            path[0] = '.';
+            path[1] = 0;
+        }
+    }
+
+    int exists = 0;
+    mp_obj_t listdir = mp_call_function_1(ilistdir, mp_obj_new_str(path, strlen(path)));
+    mp_obj_type_t* plistdir = MP_OBJ_TO_PTR(listdir);
+    mp_obj_t entry = plistdir->base.type->iternext(listdir);
+
+    while (entry != MP_OBJ_STOP_ITERATION)
+    {
+        mp_obj_tuple_t* t = MP_OBJ_TO_PTR(entry);
+
+        int type = mp_obj_get_int(t->items[1]);
+        if (type == 0x8000)
+        {
+            const char* name = mp_obj_str_get_str(t->items[0]);
+            if (exists = strcmp(filename, name) == 0)
+            {
+                break;
+            }
+        }
+
+        entry = plistdir->base.type->iternext(listdir);
+    }
+
+
+    return exists;
+}
+
+//------------------------------------------------------------------------------
+
 int usqlite_file_open(MPFILE* file, const char* pathname, int flags)
 {
     LOGFUNC;
+
+    mp_obj_t filename = mp_obj_new_str(pathname, strlen(pathname));
 
     char mode[8];
     memset(mode, 0, sizeof(mode));
@@ -20,7 +80,11 @@ int usqlite_file_open(MPFILE* file, const char* pathname, int flags)
 
     if (flags & SQLITE_OPEN_CREATE)
     {
-        *pMode++ = 'a';
+        if (!usqlite_file_exists(pathname))
+        {
+            *pMode++ = 'w';
+        }
+
         *pMode++ = '+';
     }
     else if (flags & SQLITE_OPEN_READWRITE)
@@ -39,7 +103,6 @@ int usqlite_file_open(MPFILE* file, const char* pathname, int flags)
 
     *pMode++ = 'b';
 
-    mp_obj_t filename = mp_obj_new_str(pathname, strlen(pathname));
     mp_obj_t filemode = mp_obj_new_str(mode, strlen(mode));
 
     usqlite_logprintf(___FUNC___ " '%s' mode:%s\n", pathname, mode);
@@ -127,7 +190,7 @@ int usqlite_file_flush(MPFILE* file)
 
     const mp_stream_p_t* stream = mp_get_stream(file->stream);
 
-    int error;
+    int error = 0;
     mp_uint_t result = stream->ioctl(file->stream, MP_STREAM_FLUSH, 0, &error);
     if (result == MP_STREAM_ERROR)
     {
