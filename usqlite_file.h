@@ -19,7 +19,8 @@ typedef struct _MPFILE
 MPFILE;
 
 //------------------------------------------------------------------------------
-void usqlite_file_initialize();
+
+bool usqlite_file_exists(const char* filepath);
 int usqlite_file_open(MPFILE* file, const char* name, int flags);
 int usqlite_file_close(MPFILE* file);
 int usqlite_file_read(MPFILE* file, void* pBuf, int nBuf);

@@ -55,7 +55,7 @@ STATIC void initialize()
     int rc = sqlite3_initialize();
     if (rc)
     {
-        mp_raise_msg(&usqlite_Error, "sqlite3_initialize");
+        usqlite_raise_error(rc);
         return;
     }
 
@@ -68,7 +68,7 @@ STATIC mp_obj_t usqlite_init(void)
 {
     LOGFUNC;
 
-    initialize();
+    //initialize();
 
     return mp_const_none;
 }
@@ -123,12 +123,33 @@ STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t* args)
         reset = mp_obj_get_int(args[0]);
     }
 
-    sqlite3_int64 mem = sqlite3_memory_highwater(reset);
+    sqlite3_int64 mem = sqlite3_memory_highwater(reset != 0);
 
     return mp_obj_new_int_from_ll(mem);
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_peak_obj, 0, 1, usqlite_mem_peak);
+
+//------------------------------------------------------------------------------
+
+STATIC mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t* args)
+{
+    static int mem_status = SQLITE_DEFAULT_MEMSTATUS;
+
+    if (n_args > 0)
+    {
+        mem_status = mp_obj_get_int(args[0]);
+        int rc = sqlite3_config(SQLITE_CONFIG_MEMSTATUS, mem_status);
+        if (rc)
+        {
+            usqlite_raise_error(rc);
+        }
+    }
+
+    return mp_obj_new_bool(mem_status);
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_status_obj, 0, 1, usqlite_mem_status);
 
 //------------------------------------------------------------------------------
 
@@ -161,6 +182,7 @@ STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
 
     { MP_ROM_QSTR(MP_QSTR_mem_peak),                MP_ROM_PTR(&usqlite_mem_peak_obj) },
     { MP_ROM_QSTR(MP_QSTR_mem_current),             MP_ROM_PTR(&usqlite_mem_current_obj) },
+    { MP_ROM_QSTR(MP_QSTR_mem_status),              MP_ROM_PTR(&usqlite_mem_status_obj) },
 };
 
 STATIC MP_DEFINE_CONST_DICT(usqlite_module_globals, usqlite_module_globals_table);

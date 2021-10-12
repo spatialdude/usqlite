@@ -47,6 +47,13 @@ const mp_obj_type_t usqlite_Error = {
 
 //------------------------------------------------------------------------------
 
+void usqlite_raise_error(int rc)
+{
+    mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("error:%s"), sqlite3_errstr(rc));
+}
+
+//------------------------------------------------------------------------------
+
 void usqlite_raise(sqlite3* db, const char* msg)
 {
     //int ec = sqlite3_errcode(db);

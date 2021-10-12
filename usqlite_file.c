@@ -10,7 +10,7 @@
 
 //------------------------------------------------------------------------------
 
-int usqlite_file_exists(const char* pathname)
+bool usqlite_file_exists(const char* pathname)
 {
     mp_obj_t os = mp_module_get(MP_QSTR_uos);
     mp_obj_t ilistdir = usqlite_method(os, MP_QSTR_ilistdir);
@@ -31,7 +31,7 @@ int usqlite_file_exists(const char* pathname)
         if (lastSep)
         {
             *lastSep++ = 0;
-            filename;
+            filename = lastSep;
         }
         else
         {
@@ -40,7 +40,7 @@ int usqlite_file_exists(const char* pathname)
         }
     }
 
-    int exists = 0;
+    bool exists = false;
     mp_obj_t listdir = mp_call_function_1(ilistdir, mp_obj_new_str(path, strlen(path)));
     mp_obj_type_t* plistdir = MP_OBJ_TO_PTR(listdir);
     mp_obj_t entry = plistdir->base.type->iternext(listdir);
@@ -53,7 +53,7 @@ int usqlite_file_exists(const char* pathname)
         if (type == 0x8000)
         {
             const char* name = mp_obj_str_get_str(t->items[0]);
-            if (exists = strcmp(filename, name) == 0)
+            if ((exists = strcmp(filename, name) == 0))
             {
                 break;
             }

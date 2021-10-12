@@ -12,6 +12,7 @@ int usqlite_errprintf(const char* fmt, ...);
 
 extern const mp_obj_type_t usqlite_Error;
 
+void usqlite_raise_error(int rc);
 void usqlite_raise(sqlite3* db, const char* msg);
 bool usqlite_lookup(mp_obj_t obj, qstr attr, mp_obj_t* dest);
 mp_obj_t usqlite_method(const mp_obj_module_t* module, qstr name);
