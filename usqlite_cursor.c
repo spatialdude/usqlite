@@ -3,9 +3,11 @@
 #include "py/objstr.h"
 #include "py/objtuple.h"
 
+#include <stdlib.h>
+
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in);
+STATIC mp_obj_t usqlite_cursor_execute(size_t n_args, const mp_obj_t* args);
 STATIC mp_obj_t usqlite_cursor_executemany(mp_obj_t self_in, mp_obj_t sql_in);
 
 STATIC mp_obj_t row_tuple(usqlite_cursor_t* cursor);
@@ -44,13 +46,26 @@ STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t* type, size_t n_args
         break;
     }
 
-    if (n_args > 2)
+    if (args[1] == mp_const_true)
     {
-        return usqlite_cursor_executemany(self_obj, args[1]);
+        return usqlite_cursor_executemany(self_obj, args[2]);
     }
-    else if (n_args > 1)
+    else if (args[1] == mp_const_false)
     {
-        return usqlite_cursor_execute(self_obj, args[1]);
+        mp_obj_t xargs[3] =
+        {
+            self_obj,
+            args[2]
+        };
+        size_t nxargs = 2;
+
+        if (n_args == 4)
+        {
+            xargs[2] = args[3];
+            nxargs++;
+        }
+
+        return usqlite_cursor_execute(nxargs, xargs);
     }
 
     return self_obj;
@@ -91,7 +106,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_close_obj, usqlite_cursor_close);
 
 //------------------------------------------------------------------------------
 
-STATIC int step(usqlite_cursor_t* self)
+STATIC int stepExecute(usqlite_cursor_t* self)
 {
     self->rc = sqlite3_step(self->stmt);
 
@@ -122,10 +137,166 @@ STATIC int step(usqlite_cursor_t* self)
 
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in)
+STATIC int bindParameter(sqlite3_stmt* stmt, int index, mp_obj_t value)
 {
+    if (value == mp_const_none)
+    {
+        return sqlite3_bind_null(stmt, index);
+    }
+    else if (mp_obj_is_integer(value))
+    {
+        return sqlite3_bind_int(stmt, index, mp_obj_get_int(value));
+    }
+    else if (mp_obj_is_str(value))
+    {
+        GET_STR_DATA_LEN(value, str, nstr);
+        return sqlite3_bind_text(stmt, index, (const char*)str, nstr, NULL);
+    }
+    else if (mp_obj_is_type(value, &mp_type_float))
+    {
+        return sqlite3_bind_double(stmt, index, mp_obj_get_float(value));
+    }
+    else if (mp_obj_is_type(value, &mp_type_bytes))
+    {
+        GET_STR_DATA_LEN(value, bytes, nbytes);
+        return sqlite3_bind_blob(stmt, index, bytes, nbytes, NULL);
+    }
+#if MICROPY_PY_BUILTINS_BYTEARRAY
+    if (mp_obj_is_type(value, &mp_type_bytearray)) 
+    {
+        mp_buffer_info_t buffer;
+        if (mp_get_buffer(value, &buffer, MP_BUFFER_READ))
+        {
+            return sqlite3_bind_blob(stmt, index, buffer.buf, buffer.len, NULL);
+        }
+    }
+#endif
+
+    mp_raise_msg_varg(&usqlite_Error,
+        MP_ERROR_TEXT("Unsupported parameter value type '%s'"),
+        mp_obj_get_type_str(value));
+
+    return -1;
+}
+
+//------------------------------------------------------------------------------
+
+STATIC int bindParameters(sqlite3_stmt* stmt, mp_obj_t values)
+{
+    int nParams = sqlite3_bind_parameter_count(stmt);
+    if (!nParams)
+    {
+        return SQLITE_OK;
+    }
+
+    const char* name = sqlite3_bind_parameter_name(stmt, 1);
+    if (name && *name != '?')
+    {
+        if (!mp_obj_is_dict_or_ordereddict(values))
+        {
+            mp_raise_ValueError(MP_ERROR_TEXT("dict expected for named parameters"));
+            return -1;
+        }
+
+        mp_map_t* map = mp_obj_dict_get_map(values);
+
+        for (int i = 1; i <= nParams; i++)
+        {
+            name = sqlite3_bind_parameter_name(stmt, i);
+            if (!name)
+            {
+                mp_raise_ValueError(MP_ERROR_TEXT("Unexpected named parameter"));
+                return -1;
+            }
+
+            name++;
+            mp_obj_t namestr = mp_obj_new_str(name, strlen(name));
+            mp_map_elem_t* elem = mp_map_lookup(map, namestr, MP_MAP_LOOKUP);
+
+            if (!elem)
+            {
+                mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("Missing value for parameter '%s'"), --name);
+                return -1;
+            }
+
+            int rc = bindParameter(stmt, i, elem->value);
+            if (rc)
+            {
+                return rc;
+            }
+        }
+    }
+    else
+    {
+        bool namedIndex = name && *name == '?';
+
+        size_t len = 0;
+        mp_obj_t* items = NULL;
+
+        if (mp_obj_is_type(values, &mp_type_tuple))
+        {
+            mp_obj_tuple_get(values, &len, &items);
+        }
+        else if (mp_obj_is_type(values, &mp_type_list))
+        {
+            mp_obj_list_get(values, &len, &items);
+        }
+        else if (nParams == 1 && !namedIndex)
+        {
+            return bindParameter(stmt, 1, values);
+        }
+        else
+        {
+            mp_raise_msg_varg(&usqlite_Error, 
+                MP_ERROR_TEXT("tuple or list expected for > 1 nameless parameters, got a '%s'"), 
+                mp_obj_get_type_str(values));
+            return -1;
+        }
+
+        if (!len)
+        {
+            mp_raise_ValueError(MP_ERROR_TEXT("Empty values set"));
+            return -1;
+        }
+
+        for (int i = 0; i < nParams; i++)
+        {
+            int index = i;
+            if (namedIndex)
+            {
+                name = sqlite3_bind_parameter_name(stmt, i + 1);
+                if (!name)
+                {
+                    continue;
+                }
+
+                index = atoi(name + 1) - 1;
+            }
+
+            if (index < 0 || index >= len)
+            {
+                mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("Parameter index %d > %d values"), ++index, len);
+                return -1;
+            }
+
+            int rc = bindParameter(stmt, i + 1, items[index]);
+            if (rc)
+            {
+                return rc;
+            }
+        }
+    }
+
+    return SQLITE_OK;
+}
+
+//------------------------------------------------------------------------------
+
+STATIC mp_obj_t usqlite_cursor_execute(size_t n_args, const mp_obj_t* args)
+{
+    mp_obj_t self_in = args[0];
     usqlite_cursor_t* self = MP_OBJ_TO_PTR(self_in);
-    const char* sql = mp_obj_str_get_str(sql_in);
+    const char* sql = mp_obj_str_get_str(args[1]);
 
     usqlite_cursor_close(self_in);
 
@@ -135,12 +306,12 @@ STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in)
         return mp_const_none;
     }
 
-    int result = sqlite3_prepare_v2(self->connection->db, sql, strlen(sql), &self->stmt, NULL);
-    if (result)
+    int rc = sqlite3_prepare_v2(self->connection->db, sql, strlen(sql), &self->stmt, NULL);
+    if (rc)
     {
-        mp_raise_msg_varg(&usqlite_Error, 
-            MP_ERROR_TEXT("sqlite3 error: (%d) %s preparing '%s'"), 
-            result,
+        mp_raise_msg_varg(&usqlite_Error,
+            MP_ERROR_TEXT("error (%d) %s preparing '%s'"),
+            rc,
             sqlite3_errmsg(self->connection->db),
             sql);
         sqlite3_finalize(self->stmt);
@@ -148,9 +319,36 @@ STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in)
         return mp_const_none;
     }
 
+    int nParams = sqlite3_bind_parameter_count(self->stmt);
+    if (nParams > 0)
+    {
+        if (n_args >= 3)
+        {
+            rc = bindParameters(self->stmt, args[2]);
+            if (rc > 0)
+            {
+                mp_raise_msg_varg(&usqlite_Error,
+                    MP_ERROR_TEXT("%s error binding '%s'"),
+                    sqlite3_errstr(rc),
+                    sql);
+
+                return mp_const_none;
+            }
+            else if (rc < 0)
+            {
+                return mp_const_none;
+            }
+        }
+        else
+        {
+            mp_raise_ValueError(MP_ERROR_TEXT("Values required"));
+            return mp_const_none;
+        }
+    }
+
     self->rowcount = 0;
 
-    step(self);
+    stepExecute(self);
 
     switch (self->rc)
     {
@@ -169,7 +367,7 @@ STATIC mp_obj_t usqlite_cursor_execute(mp_obj_t self_in, mp_obj_t sql_in)
     return self_in;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_cursor_execute_obj, usqlite_cursor_execute);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_cursor_execute_obj, 2, 3, usqlite_cursor_execute);
 
 //------------------------------------------------------------------------------
 
@@ -287,7 +485,7 @@ STATIC mp_obj_t usqlite_cursor_iternext(mp_obj_t self_in)
         break;
 
     case SQLITE_ROW:
-        step(self);
+        stepExecute(self);
         break;
 
     case SQLITE_DONE:

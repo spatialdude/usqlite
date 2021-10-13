@@ -81,9 +81,10 @@ STATIC mp_obj_t usqlite_connection_cursor(mp_obj_t self_in)
 {
     usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
 
-    mp_obj_t args[1] =
+    mp_obj_t args[2] =
     {
-        MP_OBJ_FROM_PTR(self)
+        MP_OBJ_FROM_PTR(self),
+        mp_const_none
     };
 
     return usqlite_cursor_type.make_new(NULL, MP_ARRAY_SIZE(args), 0, args);
@@ -93,20 +94,29 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_cursor_obj, usqlite_connecti
 
 //------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_execute(mp_obj_t self_in, mp_obj_t sql)
+STATIC mp_obj_t usqlite_connection_execute(size_t n_args, const mp_obj_t* args)
 {
-    usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
+    usqlite_connection_t* self = MP_OBJ_TO_PTR(args[0]);
 
-    mp_obj_t args[2] =
+    mp_obj_t xargs[4] =
     {
         MP_OBJ_FROM_PTR(self),
-        sql
+        mp_const_false,
+        args[1]
     };
 
-    return usqlite_cursor_type.make_new(NULL, MP_ARRAY_SIZE(args), 0, args);
+    size_t nxargs = 3;
+
+    if (n_args == 3)
+    {
+        xargs[3] = args[2];
+        nxargs++;
+    }
+
+    return usqlite_cursor_type.make_new(NULL, nxargs, 0, xargs);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_execute_obj, usqlite_connection_execute);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_execute_obj, 2, 3, usqlite_connection_execute);
 
 //------------------------------------------------------------------------------
 
@@ -117,8 +127,8 @@ STATIC mp_obj_t usqlite_connection_executemany(mp_obj_t self_in, mp_obj_t sql)
     mp_obj_t args[3] =
     {
         MP_OBJ_FROM_PTR(self),
-        sql,
-        mp_const_true
+        mp_const_true,
+        sql
     };
 
     return usqlite_cursor_type.make_new(NULL, MP_ARRAY_SIZE(args), 0, args);
