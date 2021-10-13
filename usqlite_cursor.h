@@ -20,6 +20,7 @@ typedef struct _usqlite_cursor_t
     int                     rc;
     int                     rowcount;
     usqlite_rowfactory_t    rowfactory;
+    int                     arraysize;
 }
 usqlite_cursor_t;
 

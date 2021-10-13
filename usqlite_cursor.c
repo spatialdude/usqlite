@@ -27,6 +27,7 @@ STATIC mp_obj_t usqlite_cursor_make_new(const mp_obj_type_t* type, size_t n_args
 
     self->base.type = &usqlite_cursor_type;
     self->connection = (usqlite_connection_t*)MP_OBJ_TO_PTR(args[0]);
+    self->arraysize = 1;
 
     usqlite_connection_register(self->connection, self_obj);
 
@@ -503,6 +504,84 @@ STATIC mp_obj_t usqlite_cursor_iternext(mp_obj_t self_in)
 
 //------------------------------------------------------------------------------
 
+STATIC mp_obj_t usqlite_cursor_fetchone(mp_obj_t self_in)
+{
+    usqlite_cursor_t* self = MP_OBJ_TO_PTR(self_in);
+
+    mp_obj_t result = self->rc == SQLITE_ROW
+        ? self->rowfactory(self)
+        : mp_const_none;
+
+    if (self->rc == SQLITE_ROW)
+    {
+        stepExecute(self_in);
+    }
+
+    return result;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_fetchone_obj, usqlite_cursor_fetchone);
+
+//------------------------------------------------------------------------------
+
+STATIC mp_obj_t usqlite_cursor_fetchmany(size_t n_args, const mp_obj_t* args)
+{
+    usqlite_cursor_t* self = MP_OBJ_TO_PTR(args[0]);
+
+    if (self->rc != SQLITE_ROW)
+    {
+        return mp_obj_new_list(0, NULL);
+    }
+
+    mp_obj_t row = self->rowfactory(self);
+    mp_obj_t list = mp_obj_new_list(1, &row);
+    mp_obj_list_t* listt = MP_OBJ_TO_PTR(list);
+
+    int size = n_args == 2
+        ? mp_obj_get_int(args[1])
+        : self->arraysize;
+
+    stepExecute(args[0]);
+
+    if (!size)
+    {
+        size = 1;
+    }
+
+    if (size == 1)
+    {
+        return list;
+    }
+
+    while (self->rc == SQLITE_ROW && (size < 0 || listt->len < size))
+    {
+        row = self->rowfactory(self);
+        mp_obj_list_append(list, row);
+        stepExecute(args[0]);
+    }
+
+    return list;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_cursor_fetchmany_obj, 1, 2, usqlite_cursor_fetchmany);
+
+//------------------------------------------------------------------------------
+
+STATIC mp_obj_t usqlite_cursor_fetchall(mp_obj_t self_in)
+{
+    mp_obj_t args[] =
+    {
+        self_in,
+        mp_obj_new_int(-1)
+    };
+
+    return usqlite_cursor_fetchmany(MP_ARRAY_SIZE(args), args);
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_fetchall_obj, usqlite_cursor_fetchall);
+
+//------------------------------------------------------------------------------
+
 STATIC mp_obj_t usqlite_cursor_description(sqlite3_stmt* stmt)
 {
     int columns = sqlite3_data_count(stmt);
@@ -552,11 +631,21 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
         case MP_QSTR_rowcount:
             dest[0] = mp_obj_new_int(self->rowcount);
             break;
+
+        case MP_QSTR_arraysize:
+            dest[0] = mp_obj_new_int(self->arraysize);
+            break;
         }
     }
     else if (dest[1] != MP_OBJ_NULL)
     {
-        //dest[0] = MP_OBJ_NULL; // indicate success
+        switch (attr)
+        {
+        case MP_QSTR_arraysize:
+            self->arraysize = mp_obj_get_int(dest[1]);
+            dest[0] = MP_OBJ_NULL;
+            break;
+        }
     }
 }
 
@@ -600,6 +689,9 @@ STATIC const mp_rom_map_elem_t usqlite_cursor_locals_dict_table[] =
     { MP_ROM_QSTR(MP_QSTR_close),       MP_ROM_PTR(&usqlite_cursor_close_obj) },
     { MP_ROM_QSTR(MP_QSTR_execute),     MP_ROM_PTR(&usqlite_cursor_execute_obj) },
     { MP_ROM_QSTR(MP_QSTR_executemany), MP_ROM_PTR(&usqlite_cursor_executemany_obj) },
+    { MP_ROM_QSTR(MP_QSTR_fetchone),    MP_ROM_PTR(&usqlite_cursor_fetchone_obj) },
+    { MP_ROM_QSTR(MP_QSTR_fetchmany),   MP_ROM_PTR(&usqlite_cursor_fetchmany_obj) },
+    { MP_ROM_QSTR(MP_QSTR_fetchall),    MP_ROM_PTR(&usqlite_cursor_fetchall_obj) },
 };
 
 MP_DEFINE_CONST_DICT(usqlite_cursor_locals_dict, usqlite_cursor_locals_dict_table);
