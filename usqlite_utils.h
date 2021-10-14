@@ -22,6 +22,8 @@ mp_obj_t usqlite_method(const mp_obj_module_t* module, qstr name);
 mp_obj_t usqlite_column_name(sqlite3_stmt* stmt, int column);
 mp_obj_t usqlite_column_value(sqlite3_stmt* stmt, int column);
 mp_obj_t usqlite_column_type(sqlite3_stmt* stmt, int column);
-
+#ifndef SQLITE_OMIT_DECLTYPE
+mp_obj_t usqlite_column_decltype(sqlite3_stmt* stmt, int column);
+#endif
 //------------------------------------------------------------------------------
 #endif

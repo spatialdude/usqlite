@@ -164,6 +164,15 @@ mp_obj_t usqlite_column_type(sqlite3_stmt* stmt, int column)
 }
 
 //------------------------------------------------------------------------------
+#ifndef SQLITE_OMIT_DECLTYPE
+mp_obj_t usqlite_column_decltype(sqlite3_stmt* stmt, int column)
+{
+    const char* type = sqlite3_column_decltype(stmt, column);
+
+    return mp_obj_new_str(type, strlen(type));
+}
+#endif
+//------------------------------------------------------------------------------
 
 mp_obj_t usqlite_method(const mp_obj_module_t* module, qstr name)
 {

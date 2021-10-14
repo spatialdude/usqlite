@@ -597,7 +597,11 @@ STATIC mp_obj_t usqlite_cursor_description(sqlite3_stmt* stmt)
         c->len = 7;
 
         c->items[0] = usqlite_column_name(stmt, i);
-        c->items[1] = usqlite_column_type(stmt, i);
+#ifndef SQLITE_OMIT_DECLTYPE
+        c->items[1] = usqlite_column_decltype(stmt, i);
+#else
+        c->items[1] = mp_const_none;
+#endif
         for (int j = 2; j < 7; j++)
         {
             c->items[j] = mp_const_none;
