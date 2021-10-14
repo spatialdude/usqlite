@@ -26,7 +26,7 @@ STATIC void usqlite_connection_print(const mp_print_t* print, mp_obj_t self_in, 
 {
     usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
 
-    mp_printf(print, "<%s '%s'>", mp_obj_get_type_str(self_in), sqlite3_db_filename(self->db, NULL));
+    mp_printf(print, "<%s '%s'>", mp_obj_get_type_str(self_in), self->db ? sqlite3_db_filename(self->db, NULL) : "");
 }
 
 //------------------------------------------------------------------------------
@@ -170,6 +170,10 @@ STATIC void usqlite_connection_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
         case MP_QSTR_row_type:
             dest[0] = MP_OBJ_NEW_QSTR(self->row_type);
             break;
+
+        case MP_QSTR_total_changes:
+            dest[0] = mp_obj_new_int(sqlite3_total_changes(self->db));
+            break;
         }
     }
     else if (dest[1] != MP_OBJ_NULL)
@@ -203,14 +207,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_exit_obj, 4, 4, us
 
 STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] = 
 {
-    { MP_ROM_QSTR(MP_QSTR___del__),     MP_ROM_PTR(&usqlite_connection_del_obj) },
-    { MP_ROM_QSTR(MP_QSTR___enter__),   MP_ROM_PTR(&mp_identity_obj) },
-    { MP_ROM_QSTR(MP_QSTR___exit__),    MP_ROM_PTR(&usqlite_connection_exit_obj) },
+    { MP_ROM_QSTR(MP_QSTR___del__),         MP_ROM_PTR(&usqlite_connection_del_obj) },
+    { MP_ROM_QSTR(MP_QSTR___enter__),       MP_ROM_PTR(&mp_identity_obj) },
+    { MP_ROM_QSTR(MP_QSTR___exit__),        MP_ROM_PTR(&usqlite_connection_exit_obj) },
 
-    { MP_ROM_QSTR(MP_QSTR_close),       MP_ROM_PTR(&usqlite_connection_close_obj) },
-    { MP_ROM_QSTR(MP_QSTR_cursor),      MP_ROM_PTR(&usqlite_connection_cursor_obj) },
-    { MP_ROM_QSTR(MP_QSTR_execute),     MP_ROM_PTR(&usqlite_connection_execute_obj) },
-    { MP_ROM_QSTR(MP_QSTR_executemany), MP_ROM_PTR(&usqlite_connection_executemany_obj) },
+    { MP_ROM_QSTR(MP_QSTR_close),           MP_ROM_PTR(&usqlite_connection_close_obj) },
+    { MP_ROM_QSTR(MP_QSTR_cursor),          MP_ROM_PTR(&usqlite_connection_cursor_obj) },
+    { MP_ROM_QSTR(MP_QSTR_execute),         MP_ROM_PTR(&usqlite_connection_execute_obj) },
+    { MP_ROM_QSTR(MP_QSTR_executemany),     MP_ROM_PTR(&usqlite_connection_executemany_obj) },
 };
 
 MP_DEFINE_CONST_DICT(usqlite_connection_locals_dict, usqlite_connection_locals_dict_table);

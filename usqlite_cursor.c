@@ -624,8 +624,19 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
 
         switch (attr)
         {
+        case MP_QSTR_connection:
+            dest[0] = MP_OBJ_FROM_PTR(self->connection);
+            break;
+
         case MP_QSTR_description:
             dest[0] = usqlite_cursor_description(self->stmt);
+            break;
+
+        case MP_QSTR_lastrowid:
+            {
+                sqlite3_int64 rowid = sqlite3_last_insert_rowid(self->connection->db);
+                dest[0] = rowid ? mp_obj_new_int_from_ll(rowid) : mp_const_none;
+            }
             break;
 
         case MP_QSTR_rowcount:

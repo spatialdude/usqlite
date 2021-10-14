@@ -113,6 +113,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);
 
 //------------------------------------------------------------------------------
 
+STATIC mp_obj_t usqlite_complete_statement(mp_obj_t sql)
+{
+    return mp_obj_new_bool(sqlite3_complete(mp_obj_str_get_str(sql)));
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_complete_statement_obj, usqlite_complete_statement);
+
+//------------------------------------------------------------------------------
+
 STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t* args)
 {
     initialize();
@@ -179,6 +188,7 @@ STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
     { MP_ROM_QSTR(MP_QSTR_sqlite_version_number),   MP_ROM_INT(SQLITE_VERSION_NUMBER) },
 
     { MP_ROM_QSTR(MP_QSTR_connect),                 MP_ROM_PTR(&usqlite_connect_obj) },
+    { MP_ROM_QSTR(MP_QSTR_complete_statement),      MP_ROM_PTR(&usqlite_complete_statement_obj) },
 
     { MP_ROM_QSTR(MP_QSTR_mem_peak),                MP_ROM_PTR(&usqlite_mem_peak_obj) },
     { MP_ROM_QSTR(MP_QSTR_mem_current),             MP_ROM_PTR(&usqlite_mem_current_obj) },
