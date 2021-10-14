@@ -13,6 +13,7 @@ typedef struct _usqlite_connection_t
     qstr            row_type;
     mp_obj_t        row_factory;
     mp_obj_list_t   cursors;
+    mp_obj_t        trace_callback;
 } 
 usqlite_connection_t;
 

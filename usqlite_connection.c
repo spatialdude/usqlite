@@ -138,6 +138,51 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_executemany_obj, usqlite_con
 
 //------------------------------------------------------------------------------
 
+STATIC int traceCallback(unsigned uMask, void* context, void* p, void* x)
+{
+    usqlite_connection_t* self = (usqlite_connection_t*)context;
+    sqlite3_stmt* stmt = (sqlite3_stmt*)p;
+    char* xsql = sqlite3_expanded_sql(stmt);
+    if (xsql)
+    {
+        mp_call_function_1(self->trace_callback, mp_obj_new_str(xsql, strlen(xsql)));
+        sqlite3_free(xsql);
+    }
+    else
+    {
+        const char* sql = sqlite3_sql(stmt);
+        mp_call_function_1(self->trace_callback, mp_obj_new_str(sql, strlen(sql)));
+    }
+
+    return 0;
+}
+
+STATIC mp_obj_t usqlite_connection_set_trace_callback(mp_obj_t self_in, mp_obj_t callback)
+{
+    usqlite_connection_t* self = MP_OBJ_TO_PTR(self_in);
+
+    if (callback == mp_const_none)
+    {
+        self->trace_callback = mp_const_none;
+        sqlite3_trace_v2(self->db, 0, NULL, NULL);
+    }
+    else if (mp_obj_is_callable(callback))
+    {
+        self->trace_callback = callback;
+        sqlite3_trace_v2(self->db, SQLITE_TRACE_STMT, traceCallback, self);
+    }
+    else
+    {
+        mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid callback"));
+    }
+
+    return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_set_trace_callback_obj, usqlite_connection_set_trace_callback);
+
+//------------------------------------------------------------------------------
+
 void usqlite_connection_register(usqlite_connection_t* connection, mp_obj_t cursor)
 {
     mp_obj_t cursors = MP_OBJ_FROM_PTR(&connection->cursors);
@@ -207,14 +252,15 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_exit_obj, 4, 4, us
 
 STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] = 
 {
-    { MP_ROM_QSTR(MP_QSTR___del__),         MP_ROM_PTR(&usqlite_connection_del_obj) },
-    { MP_ROM_QSTR(MP_QSTR___enter__),       MP_ROM_PTR(&mp_identity_obj) },
-    { MP_ROM_QSTR(MP_QSTR___exit__),        MP_ROM_PTR(&usqlite_connection_exit_obj) },
+    { MP_ROM_QSTR(MP_QSTR___del__),             MP_ROM_PTR(&usqlite_connection_del_obj) },
+    { MP_ROM_QSTR(MP_QSTR___enter__),           MP_ROM_PTR(&mp_identity_obj) },
+    { MP_ROM_QSTR(MP_QSTR___exit__),            MP_ROM_PTR(&usqlite_connection_exit_obj) },
 
-    { MP_ROM_QSTR(MP_QSTR_close),           MP_ROM_PTR(&usqlite_connection_close_obj) },
-    { MP_ROM_QSTR(MP_QSTR_cursor),          MP_ROM_PTR(&usqlite_connection_cursor_obj) },
-    { MP_ROM_QSTR(MP_QSTR_execute),         MP_ROM_PTR(&usqlite_connection_execute_obj) },
-    { MP_ROM_QSTR(MP_QSTR_executemany),     MP_ROM_PTR(&usqlite_connection_executemany_obj) },
+    { MP_ROM_QSTR(MP_QSTR_close),               MP_ROM_PTR(&usqlite_connection_close_obj) },
+    { MP_ROM_QSTR(MP_QSTR_cursor),              MP_ROM_PTR(&usqlite_connection_cursor_obj) },
+    { MP_ROM_QSTR(MP_QSTR_execute),             MP_ROM_PTR(&usqlite_connection_execute_obj) },
+    { MP_ROM_QSTR(MP_QSTR_executemany),         MP_ROM_PTR(&usqlite_connection_executemany_obj) },
+    { MP_ROM_QSTR(MP_QSTR_set_trace_callback),  MP_ROM_PTR(&usqlite_connection_set_trace_callback_obj) },
 };
 
 MP_DEFINE_CONST_DICT(usqlite_connection_locals_dict, usqlite_connection_locals_dict_table);
