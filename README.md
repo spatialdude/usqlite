@@ -1,4 +1,4 @@
-# μSQLite MicroPython Module
+# μSQLite module for MicroPython
 
 **WARNING**: This project is in the beta development stage and may be subject to change.
 
@@ -45,7 +45,7 @@ The `usqlite` module is designed so it can be easily compiled and included in Mi
 
 ### SQLite C source code requirements
 
-The `usqlite` module source code repository currently doesn't include the **SQLite** C source code files. You will need to supply the SQLite C source files to build `uqsqlite`. Fortunatley the required SQLite C source files are freely available for download from the 
+The `usqlite` module source code repository currently does not include the **SQLite** C source code files. You will need to supply the SQLite C source files to build `uqsqlite`. Fortunately the required SQLite C source files are freely available for download from the 
 **SQLite** [Download](https://sqlite.org/download.html) page. 
 
 The [*amalagamated*](https://sqlite.org/amalgamation.html) version of the SQLite C source is required by `usqlite`. This simplifies the compilation requirements as only two of the SQLite C source files are needed by `usqlite`, namely `sqlite3.h` and `sqlite3.c` The default `usqlite` project configuration is `#include` these two SQLite C source files from a separate source directory.
@@ -60,12 +60,22 @@ The directory structure used in the develoment of this module is as shown below.
     /micropython            # MicroPython source code
     /modules
         micropython.cmake
-        /usqlite3           # μSQLite source code 
+        /usqlite            # μSQLite source code 
         ...
         ...
     /sqlite                 # SQLite C amalgamated source code
         sqlite.h
         sqlite.c
+```
+
+
+```sh
+cd <projectroot>
+mkdir modules
+mkdir sqlite
+git clone https://github.com/micropython/micropython.git
+cd modules
+git clone https://github.com/spatialdude/usqlite.git
 ```
 
 `micropython.cmake`
@@ -76,16 +86,6 @@ The directory structure used in the develoment of this module is as shown below.
 # used to prefix subdirectories.
 
 include(${CMAKE_CURRENT_LIST_DIR}/usqlite/micropython.cmake)
-```
-
-
-```sh
-cd <projectroot>
-git clone https://github.com/micropython/micropython.git
-cd modules
-mkdir modules
-cd modules
-git clone https://github.com/spatialdude/usqlite.git
 ```
 
 ### Compiling
@@ -123,13 +123,13 @@ The `usqlite` configuration settings can be found in the C header file [`usqlite
 
 ### Memory allocation configuration
 
-MicroPython builds often need to account for constrained memory enviroments. Fortunatley the SQLite library is lightweight and has been designed to so that it can be configured to accomodate for many [different memory environment needs](https://sqlite.org/malloc.html).
+MicroPython builds often need to account for constrained memory enviroments. Fortunately the SQLite library is lightweight and has been designed so that it can be configured to accomodate many [different memory environment needs](https://sqlite.org/malloc.html).
 
 **SQLite** does an excellent job of keeping memory usage as low as possible, so `usqlite` can be made to work well even in very tightly constrained memory spaces. The `usqlite` module provides functions that allow your application to monitor memory usage.
 
 The default configuration of `usqlite` implements a custom dymanic memory allocator that uses MicroPython GC heap. Memory demands placed on the heap will vary greatly depending on the complexity of the SQL of your application. 
 
-`usqlite` can be configured with an alternate memory configuration allocation fonfiguration that limits the memory to a fixed static heap size.
+`usqlite` can be configured with an alternate memory configuration allocation that limits the memory to a fixed static heap size.
 
 ## `usqlite` module API
 
@@ -154,7 +154,7 @@ The details in this section will describe differences and API features unique to
 
 ### **Connection** object
 
-A `Connection` is object is returned by the `usqlite.connect()` function.
+A `Connection` object is returned by the `usqlite.connect()` function.
 
 |Name|Type|Data type|Description|
 |---|---|---|---|
@@ -199,7 +199,7 @@ The `row_type` row is a specialised type of `tuple` object with an the addional 
 
 Indexed parameter values are be supplied as a `tuple` or `list`
 
-For convenience, if the SQL statment contains a single `?` parameter, the paramater value can also supplied as a single value.
+For convenience, if the SQL statment contains a single `?` parameter, the parameter value can also be supplied as a single value.
 
 e.g.
 
