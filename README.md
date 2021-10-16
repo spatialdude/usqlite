@@ -21,7 +21,7 @@ con.executemany(
     "BEGIN TRANSACTION;"
     "CREATE TABLE IF NOT EXISTS data (name TEXT, year INT);"+
     "INSERT INTO data VALUES ('Larry', 1902);"+
-    "INSERT INTO data VALUES ('Cury', 1903);"+
+    "INSERT INTO data VALUES ('Curly', 1903);"+
     "INSERT INTO data VALUES ('Moe', 1897);"+
     "COMMIT;")
 
@@ -64,8 +64,8 @@ The directory structure used in the develoment of this module is as shown below.
         ...
         ...
     /sqlite                 # SQLite C amalgamated source code
-        sqlite.h
-        sqlite.c
+        sqlite3.h
+        sqlite3.c
 ```
 
 
@@ -98,6 +98,7 @@ e.g. Compiling on a Linux system targetting the Raspberry Pi Pico with a project
 
 ```sh
 cd ~/pico/micropython/ports/rp2
+make submodules
 make clean
 make USER_C_MODULES=~/pico/modules/micropython.cmake
 ```
