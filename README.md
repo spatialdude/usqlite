@@ -13,7 +13,7 @@ Using the `usqlite` module in an application is relatively simple. The applicati
 import usqlite
 
 if not usqlite.mem_status():
-    usqlite.mem_status(True) # Enable memory status monitoring
+    usqlite.mem_status(True) # Enable memory usage monitoring
 
 con = usqlite.connect("data.db")
 
