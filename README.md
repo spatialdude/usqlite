@@ -161,7 +161,7 @@ The details in this section will describe differences and API features unique to
 |---|---|---|
 |`connect(<database>)`|`Connection`||
 |`statement_complete(<sql>)`|`bool`||
-|`mem_current()`|`int`|Current `usqlite` mmodule memory usage in bytes.|
+|`mem_current()`|`int`|Current `usqlite` module memory usage in bytes.|
 |`mem_peak()`|`int`|Peak `usqlite` module memory usage in bytes. Include optional `bool` parameter `True` to reset peak memory usage statistics.|
 |`mem_status(<enable>)`|`bool`| Set or returns current status of memory usage monitoring. The memory usage status monitoring can be enabled or disabled via an optional `bool` parameter. The status can only be set on initialisation before the execution of any SQL.| 
 
@@ -171,10 +171,10 @@ A `Connection` object is returned by the `usqlite.connect()` function.
 
 #### Attributes
 
-|Name|Type|Description|
-|---|---|---|
-|`row_type`|`str`|Get/set row data type: `tuple` (default), `dict`, or `row`|
-|`total_changes`|`int`||
+|Name|Type|Access|Description|
+|---|---|---|---|
+|`row_type`|`str`|`R/W`|Get/set row data type: `tuple` (default), `dict`, or `row`|
+|`total_changes`|`int`|`R`||
 
 #### Functions
 
@@ -189,13 +189,13 @@ A `Connection` object is returned by the `usqlite.connect()` function.
 
 #### Attributes
 
-|Name|Type|Description|
-|---|---|---|
-|`arraysize`|`int`||
-|`connection`|`Connection`||
-|`description`|`list`||
-|`lastrowid`|`int`||
-|`rowcount`|`int`||
+|Name|Type|Access|Description|
+|---|---|---|---|
+|`arraysize`|`int`|`R/W`||
+|`connection`|`Connection`|`R`||
+|`description`|`list`|`R`||
+|`lastrowid`|`int`|`R`||
+|`rowcount`|`int`|`R`||
 
 #### Functions
 
@@ -220,7 +220,7 @@ The `row_type` row is a specialised type of `tuple` object with an the addional 
 
 ### `execute` function parameter substition
 
-`usqlite` has an extented range of [SQL expression](https://sqlite.org/lang_expr.html) parameter subsitution methods available.
+`usqlite` has an extended range of [SQL expression](https://sqlite.org/lang_expr.html) parameter subsitution methods available.
 
 #### `?` and `?NNN` indexed parameters
 
