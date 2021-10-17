@@ -23,6 +23,7 @@ con.executemany(
     "INSERT INTO data VALUES ('Larry', 1902);"+
     "INSERT INTO data VALUES ('Curly', 1903);"+
     "INSERT INTO data VALUES ('Moe', 1897);"+
+    "INSERT INTO data VALUES ('Shemp', 1895);"+
     "COMMIT;")
 
 with con.execute("SELECT * from data") as cur:
