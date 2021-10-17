@@ -182,7 +182,7 @@ A `Connection` object is returned by the `usqlite.connect()` function.
 |---|---|---|
 |`close()`|`None`|Close the connection and all cursors associated with the connection.|
 |`execute(<sql>)`|`Cursor`||
-|`executemany(<sql)`|`Cursor`||
+|`executemany(<sql>)`|`Cursor`||
 |`set_trace_callback(<callback>)`|`None`||
 
 ### **Cursor** object
