@@ -131,7 +131,7 @@ MicroPython builds often need to account for constrained memory enviroments. For
 
 **SQLite** does an excellent job of keeping memory usage as low as possible, so `usqlite` can be made to work well even in very tightly constrained memory spaces. The `usqlite` module provides functions that allow your application to monitor memory usage.
 
-The default configuration of `usqlite` implements a custom dymanic memory allocator that uses MicroPython GC heap. Memory demands placed on the heap will vary greatly depending on the complexity of the SQL of your application. 
+The default configuration of `usqlite` implements a custom dymanic memory allocator that uses MicroPython's GC heap. Memory demands placed on the heap will vary greatly depending on the complexity of the SQL of your application. 
 
 `usqlite` can be configured with an alternate memory configuration allocation that limits the memory to a fixed static heap size.
 
@@ -218,9 +218,9 @@ If the `row_type` is `dict` then each row of data is returnened in as a `dict` o
 The `row_type` row is a specialised type of `tuple` object with an the addional `keys` property that returns a `tuple` of column names.
 
 
-### `execute` function parameter substition
+### `execute` function parameter substitution
 
-`usqlite` has an extended range of [SQL expression](https://sqlite.org/lang_expr.html) parameter subsitution methods available.
+`usqlite` has an extended range of [SQL expression](https://sqlite.org/lang_expr.html) parameter substitution methods available.
 
 #### `?` and `?NNN` indexed parameters
 
