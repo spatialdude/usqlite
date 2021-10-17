@@ -137,7 +137,7 @@ The default configuration of `usqlite` implements a custom dymanic memory alloca
 
 ---
 
-## `usqlite` module API
+## `usqlite` library API
 
 As the `usqlite` API interface is highly compatible with the standard [**`sqlite3`**](https://docs.python.org/3/library/sqlite3.html) library for for Python, much of the `sqlite3` documentation is also applicable to `usqlite`.
 
