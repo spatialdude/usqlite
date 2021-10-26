@@ -27,32 +27,32 @@ SOFTWARE.
 
 #include "py/obj.h"
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 #ifdef USQLITE_DEBUG
-int usqlite_logprintf(const char* fmt, ...);
-int usqlite_errprintf(const char* fmt, ...);
+int usqlite_logprintf(const char *fmt, ...);
+int usqlite_errprintf(const char *fmt, ...);
 #else
 #define usqlite_logprintf(...)
 #define usqlite_errprintf(...)
 #endif
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 extern const mp_obj_type_t usqlite_Error;
 
 void usqlite_raise_error(int rc);
-void usqlite_raise(sqlite3* db, const char* msg);
-bool usqlite_lookup(mp_obj_t obj, qstr attr, mp_obj_t* dest);
-mp_obj_t usqlite_method(const mp_obj_module_t* module, qstr name);
+void usqlite_raise(sqlite3 *db, const char *msg);
+bool usqlite_lookup(mp_obj_t obj, qstr attr, mp_obj_t *dest);
+mp_obj_t usqlite_method(const mp_obj_module_t *module, qstr name);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-mp_obj_t usqlite_column_name(sqlite3_stmt* stmt, int column);
-mp_obj_t usqlite_column_value(sqlite3_stmt* stmt, int column);
-mp_obj_t usqlite_column_type(sqlite3_stmt* stmt, int column);
+mp_obj_t usqlite_column_name(sqlite3_stmt *stmt, int column);
+mp_obj_t usqlite_column_value(sqlite3_stmt *stmt, int column);
+mp_obj_t usqlite_column_type(sqlite3_stmt *stmt, int column);
 #ifndef SQLITE_OMIT_DECLTYPE
-mp_obj_t usqlite_column_decltype(sqlite3_stmt* stmt, int column);
+mp_obj_t usqlite_column_decltype(sqlite3_stmt *stmt, int column);
 #endif
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 #endif

@@ -27,14 +27,12 @@ SOFTWARE.
 #include "py/objstr.h"
 #include "py/objtuple.h"
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-void usqlite_row_type_initialize()
-{
+void usqlite_row_type_initialize() {
     static int initialized = 0;
 
-    if (initialized)
-    {
+    if (initialized) {
         return;
     }
 
@@ -44,13 +42,12 @@ void usqlite_row_type_initialize()
     initialized = 1;
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t keys(usqlite_cursor_t* cursor)
-{
+STATIC mp_obj_t keys(usqlite_cursor_t *cursor) {
     int columns = sqlite3_data_count(cursor->stmt);
 
-    mp_obj_tuple_t* o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
+    mp_obj_tuple_t *o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
     o->base.type = &mp_type_tuple;
     o->len = columns;
 
@@ -62,31 +59,28 @@ STATIC mp_obj_t keys(usqlite_cursor_t* cursor)
     return MP_OBJ_FROM_PTR(o);
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest)
-{
-    if (dest[0] == MP_OBJ_NULL)
-    {
-        if ((usqlite_lookup(self_in, attr, dest)))
-        {
+STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
+    if (dest[0] == MP_OBJ_NULL) {
+        if ((usqlite_lookup(self_in, attr, dest))) {
             return;
         }
 
-        mp_obj_tuple_t* self = (mp_obj_tuple_t*)self_in;
+        mp_obj_tuple_t *self = (mp_obj_tuple_t *)self_in;
 
         switch (attr)
         {
-        case MP_QSTR_keys:
-            dest[0] = keys(self->items[self->len]);
-            break;
+            case MP_QSTR_keys:
+                dest[0] = keys(self->items[self->len]);
+                break;
         }
     }
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-mp_obj_type_t usqlite_row_type = 
+mp_obj_type_t usqlite_row_type =
 {
     { &mp_type_type },
     .name = MP_QSTR_Row,
@@ -100,4 +94,4 @@ mp_obj_type_t usqlite_row_type =
     .attr = usqlite_row_attr
 };
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------

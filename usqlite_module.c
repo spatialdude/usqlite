@@ -32,7 +32,7 @@ SOFTWARE.
 #include "usqlite.h"
 #include "usqlite_mem.h"
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 STATIC const MP_DEFINE_STR_OBJ(usqlite_version, USQLITE_VERSION);
 
@@ -49,9 +49,9 @@ STATIC const mp_rom_obj_tuple_t usqlite_version_info = {
 
 STATIC const MP_DEFINE_STR_OBJ(sqlite_version, SQLITE_VERSION);
 
-#define SQLITE_VERSION_MAJOR  (int)(SQLITE_VERSION_NUMBER/1000000)
-#define SQLITE_VERSION_MINOR  (int)((SQLITE_VERSION_NUMBER - SQLITE_VERSION_MAJOR*1000000)/1000)
-#define SQLITE_VERSION_MICRO  (SQLITE_VERSION_NUMBER - SQLITE_VERSION_MAJOR*1000000 - SQLITE_VERSION_MINOR*1000)
+#define SQLITE_VERSION_MAJOR  (int)(SQLITE_VERSION_NUMBER / 1000000)
+#define SQLITE_VERSION_MINOR  (int)((SQLITE_VERSION_NUMBER - SQLITE_VERSION_MAJOR * 1000000) / 1000)
+#define SQLITE_VERSION_MICRO  (SQLITE_VERSION_NUMBER - SQLITE_VERSION_MAJOR * 1000000 - SQLITE_VERSION_MINOR * 1000)
 
 STATIC const mp_rom_obj_tuple_t sqlite_version_info = {
     { &mp_type_tuple },
@@ -63,22 +63,19 @@ STATIC const mp_rom_obj_tuple_t sqlite_version_info = {
     },
 };
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC void initialize()
-{
+STATIC void initialize() {
     static int initialized = 0;
 
-    if (initialized)
-    {
+    if (initialized) {
         return;
     }
 
     usqlite_mem_init();
 
     int rc = sqlite3_initialize();
-    if (rc)
-    {
+    if (rc) {
         usqlite_raise_error(rc);
         return;
     }
@@ -86,39 +83,35 @@ STATIC void initialize()
     initialized = 1;
 }
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_init(void)
-{
+STATIC mp_obj_t usqlite_init(void) {
     LOGFUNC;
 
-    //initialize();
+    // initialize();
 
     return mp_const_none;
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(usqlite_init_obj, usqlite_init);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connect(mp_obj_t filename) 
-{
+STATIC mp_obj_t usqlite_connect(mp_obj_t filename) {
     initialize();
 
-    const char* pFilename = mp_obj_str_get_str(filename);
+    const char *pFilename = mp_obj_str_get_str(filename);
 
-    if (!pFilename || !strlen(pFilename))
-    {
+    if (!pFilename || !strlen(pFilename)) {
         mp_raise_msg(&usqlite_Error, MP_ERROR_TEXT("Empty filename"));
         return mp_const_none;
     }
 
     usqlite_logprintf(___FUNC___ " filename: '%s'\n", pFilename);
 
-    sqlite3* db = NULL;
+    sqlite3 *db = NULL;
     int rc = sqlite3_open(pFilename, &db);
-    if (rc)
-    {
+    if (rc) {
         mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("error %d:%s opening '%s'"), rc, sqlite3_errstr(rc), pFilename);
         return mp_const_none;
     }
@@ -135,24 +128,21 @@ STATIC mp_obj_t usqlite_connect(mp_obj_t filename)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_complete_statement(mp_obj_t sql)
-{
+STATIC mp_obj_t usqlite_complete_statement(mp_obj_t sql) {
     return mp_obj_new_bool(sqlite3_complete(mp_obj_str_get_str(sql)));
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_complete_statement_obj, usqlite_complete_statement);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t* args)
-{
+STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t *args) {
     initialize();
 
     int reset = 0;
-    if (n_args > 0)
-    {
+    if (n_args > 0) {
         reset = mp_obj_get_int(args[0]);
     }
 
@@ -163,18 +153,15 @@ STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t* args)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_peak_obj, 0, 1, usqlite_mem_peak);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t* args)
-{
+STATIC mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t *args) {
     static int mem_status = SQLITE_DEFAULT_MEMSTATUS;
 
-    if (n_args > 0)
-    {
+    if (n_args > 0) {
         mem_status = mp_obj_get_int(args[0]);
         int rc = sqlite3_config(SQLITE_CONFIG_MEMSTATUS, mem_status);
-        if (rc)
-        {
+        if (rc) {
             usqlite_raise_error(rc);
         }
     }
@@ -184,10 +171,9 @@ STATIC mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t* args)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_status_obj, 0, 1, usqlite_mem_status);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_mem_current(void)
-{
+STATIC mp_obj_t usqlite_mem_current(void) {
     initialize();
 
     sqlite3_int64 mem = sqlite3_memory_used();
@@ -197,7 +183,7 @@ STATIC mp_obj_t usqlite_mem_current(void)
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(usqlite_mem_current_obj, usqlite_mem_current);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
 {
@@ -221,7 +207,7 @@ STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
 
 STATIC MP_DEFINE_CONST_DICT(usqlite_module_globals, usqlite_module_globals_table);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 const mp_obj_module_t usqlite_module =
 {
@@ -231,4 +217,4 @@ const mp_obj_module_t usqlite_module =
 
 MP_REGISTER_MODULE(MP_QSTR_usqlite, usqlite_module, 1);
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------

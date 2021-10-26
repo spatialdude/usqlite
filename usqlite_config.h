@@ -25,12 +25,12 @@ SOFTWARE.
 #ifndef usqlite_config_h
 #define usqlite_config_h
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 // usqlite configuration options
 
 #undef USQLITE_DEBUG
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 // SQLite configuration options - https://sqlite.org/compile.html
 
 #define SQLITE_OS_OTHER 1
@@ -39,7 +39,7 @@ SOFTWARE.
 #define SQLITE_OMIT_ATTACH 1
 #define SQLITE_OMIT_AUTHORIZATION 1
 #define SQLITE_OMIT_AUTOINIT 1
-//#define SQLITE_OMIT_DECLTYPE 1
+// #define SQLITE_OMIT_DECLTYPE 1
 #define SQLITE_OMIT_DEPRECATED 1
 #define SQLITE_OMIT_EXPLAIN 1
 #define SQLITE_OMIT_LOAD_EXTENSION 1
@@ -50,7 +50,7 @@ SOFTWARE.
 #define SQLITE_OMIT_SHARED_CACHE 1
 #define SQLITE_OMIT_TCL_VARIABLE 1
 #define SQLITE_OMIT_UTF16 1
-//#define SQLITE_OMIT_WAL 1
+// #define SQLITE_OMIT_WAL 1
 
 #define SQLITE_UNTESTABLE 1
 
@@ -67,16 +67,16 @@ SOFTWARE.
 #define SQLITE_ZERO_MALLOC 1
 
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 #ifdef SQLITE_ZERO_MALLOC
-//#define SQLITE_ENABLE_MEMSYS5 1
+// #define SQLITE_ENABLE_MEMSYS5 1
 #endif
 
 #ifdef SQLITE_ENABLE_MEMSYS5
-#define MEMSYS5_HEAP_SIZE		128 * 1024
+#define MEMSYS5_HEAP_SIZE               128 * 1024
 #endif
 
-//------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
 
 #endif
