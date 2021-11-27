@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include "usqlite_config.h"
 
-#include "../../sqlite/sqlite3.h"
+#include "sqlite3.h"
 
 #include "usqlite_connection.h"
 #include "usqlite_cursor.h"
