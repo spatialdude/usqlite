@@ -92,32 +92,15 @@ include(${CMAKE_CURRENT_LIST_DIR}/usqlite/micropython.cmake)
 
 ### Compiling
 
-#### **Unix/Linux**
-
-The typical method of compiling `usqlite` on Unix/Linux systems is to use the `USER_C_MODULES` parameter with `make`.
-
-e.g. Compiling on a Linux system targetting the Raspberry Pi Pico with a project root folder in the home directory named `pico`
-
-```sh
-cd ~/pico/micropython/ports/rp2
-make submodules
-make clean
-make USER_C_MODULES=~/pico/modules/micropython.cmake
-```
-
 Refer to the MicroPython's [Getting Started](https://github.com/micropython/micropython/wiki/Getting-Started) wiki and documentation for more details on setting up a build environment.
 
-#### **Windows**
+#### Ports
 
-Most of the development and debugging of `usqlite` is first done on **Windows** using [**Visual Studio 2019**](https://visualstudio.microsoft.com/vs/) before cross compilation for other hardware such as the Raspberry Pi Pico.
+* [ESP32](https://github.com/spatialdude/usqlite/wiki/esp32)
+* [Raspberry Pi Pico](https://github.com/spatialdude/usqlite/wiki/rp2)
+* [Unix](https://github.com/spatialdude/usqlite/wiki/unix)
+* [Windows](https://github.com/spatialdude/usqlite/wiki/windows)
 
-`usqlite.props` is included in the source code as a convenience for inclusion in the Visual Studio project file `micropython.vcxproj`. 
-
-To include `usqlite.props`, edit `micropython.vcxproj` in a text editor and add the following along side the other ```<Import.../>``` elements:
-
-```xml
-<Import Project="$(PyBaseDir)\..\modules\usqlite\usqlite.props"/>
-```
 
 ### Custom Configurations
 
