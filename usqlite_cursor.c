@@ -186,7 +186,7 @@ STATIC int bindParameter(sqlite3_stmt *stmt, int index, mp_obj_t value) {
 // ------------------------------------------------------------------------------
 
 STATIC int bindParameters(sqlite3_stmt *stmt, mp_obj_t values) {
-    int nParams = sqlite3_bind_parameter_count(stmt);
+    size_t nParams = sqlite3_bind_parameter_count(stmt);
     if (!nParams) {
         return SQLITE_OK;
     }
@@ -200,7 +200,7 @@ STATIC int bindParameters(sqlite3_stmt *stmt, mp_obj_t values) {
 
         mp_map_t *map = mp_obj_dict_get_map(values);
 
-        for (int i = 1; i <= nParams; i++)
+        for (size_t i = 1; i <= nParams; i++)
         {
             name = sqlite3_bind_parameter_name(stmt, i);
             if (!name) {
@@ -246,19 +246,19 @@ STATIC int bindParameters(sqlite3_stmt *stmt, mp_obj_t values) {
             return -1;
         }
 
-        for (int i = 0; i < nParams; i++)
+        for (size_t i = 0; i < nParams; i++)
         {
-            int index = i;
+            size_t index = i;
             if (namedIndex) {
                 name = sqlite3_bind_parameter_name(stmt, i + 1);
                 if (!name) {
                     continue;
                 }
 
-                index = atoi(name + 1) - 1;
+                index = (size_t)atoi(name + 1) - 1;
             }
 
-            if (index < 0 || index >= len) {
+            if (index >= len) {
                 mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("Parameter index %d > %d values"), ++index, len);
                 return -1;
             }
@@ -510,7 +510,7 @@ STATIC mp_obj_t usqlite_cursor_fetchmany(size_t n_args, const mp_obj_t *args) {
         return list;
     }
 
-    while (self->rc == SQLITE_ROW && (size < 0 || listt->len < size)) {
+    while (self->rc == SQLITE_ROW && (size < 0 || (int)listt->len < size)) {
         row = self->rowfactory(self);
         mp_obj_list_append(list, row);
         stepExecute(args[0]);
@@ -577,8 +577,17 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
             return;
         }
 
-        switch (attr)
-        {
+        const char* strConnection = "connection";
+        mp_obj_t objConnection = mp_obj_new_str(strConnection, strlen(strConnection));
+        qstr qstrConnection = mp_obj_str_get_qstr(objConnection);
+
+        if (attr == qstrConnection) {
+            dest[0] = MP_OBJ_FROM_PTR(self->connection);
+        }
+        else {
+
+            switch (attr)
+            {
             case MP_QSTR_connection:
                 dest[0] = MP_OBJ_FROM_PTR(self->connection);
                 break;
@@ -591,7 +600,7 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
                 sqlite3_int64 rowid = sqlite3_last_insert_rowid(self->connection->db);
                 dest[0] = rowid ? mp_obj_new_int_from_ll(rowid) : mp_const_none;
             }
-            break;
+                                  break;
 
             case MP_QSTR_rowcount:
                 dest[0] = mp_obj_new_int(self->rowcount);
@@ -600,6 +609,7 @@ STATIC void usqlite_cursor_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
             case MP_QSTR_arraysize:
                 dest[0] = mp_obj_new_int(self->arraysize);
                 break;
+            }
         }
     } else if (dest[1] != MP_OBJ_NULL) {
         switch (attr)

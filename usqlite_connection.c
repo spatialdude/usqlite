@@ -61,7 +61,7 @@ STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
         return mp_const_none;
     }
 
-    for (int i = 0; i < self->cursors.len; i++)
+    for (size_t i = 0; i < self->cursors.len; i++)
     {
         mp_obj_t cursor = self->cursors.items[i];
         self->cursors.items[0] = mp_const_none;

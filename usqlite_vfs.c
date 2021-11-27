@@ -222,12 +222,12 @@ static sqlite3_io_methods mpvfs_io_methods =
     mpvfsFileControl,                   /* xFileControl */
     mpvfsSectorSize,                    /* xSectorSize */
     mpvfsDeviceCharacteristics,         /* xDeviceCharacteristics */
-    // mpvfsShmMap,                     /* xShmMap */
-    // mpvfsShmLock,                    /* xShmLock */
-    // mpvfsShmBarrier,                 /* xShmBarrier */
-    // mpvfsShmUnmap,                   /* xShmUnmap */
-    // mpvfsFetch,
-    // mpvfsUnfetch
+    NULL,// mpvfsShmMap,                     /* xShmMap */
+    NULL,// mpvfsShmLock,                    /* xShmLock */
+    NULL,// mpvfsShmBarrier,                 /* xShmBarrier */
+    NULL,// mpvfsShmUnmap,                   /* xShmUnmap */
+    NULL,// mpvfsFetch,
+    NULL // mpvfsUnfetch
 };
 
 // ------------------------------------------------------------------------------
@@ -337,6 +337,11 @@ static sqlite3_vfs mpvfs =
     mpvfsRandomness,                /* xRandomness */
     NULL,// mpvfsSleep,                    /* xSleep */
     NULL,// mpvfsCurrentTime,              /* xCurrentTime */
+    NULL,// mpvfsGetLastError,             /* xGetLastError */
+    NULL,// mpvfsGetCurrentTimeInt64,      /* xCurrentTimeInt64 */
+    NULL,// mpvfsSetSystemCall,            /* xSetSystemCall */
+    NULL,// mpvfsGetSystemCall,            /* xGetSystemCall */
+    NULL // mpvfsNextSystemCall            /* xNextSystemCall */
 };
 
 // ------------------------------------------------------------------------------

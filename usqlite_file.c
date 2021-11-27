@@ -151,12 +151,12 @@ int usqlite_file_close(MPFILE *file) {
 
 // ------------------------------------------------------------------------------
 
-int usqlite_file_read(MPFILE *file, void *pBuf, int nBuf) {
+int usqlite_file_read(MPFILE *file, void *pBuf, size_t nBuf) {
     LOGFUNC;
 
     int error = 0;
     mp_uint_t size = mp_stream_rw(file->stream, pBuf, nBuf, &error, MP_STREAM_RW_READ);
-    if (size < 0) {
+    if (size != nBuf) {
         usqlite_errprintf("write error: %d", error);
     }
 
@@ -165,13 +165,13 @@ int usqlite_file_read(MPFILE *file, void *pBuf, int nBuf) {
 
 // ------------------------------------------------------------------------------
 
-int usqlite_file_write(MPFILE *file, const void *pBuf, int nBuf) {
+int usqlite_file_write(MPFILE *file, const void *pBuf, size_t nBuf) {
     LOGFUNC;
 
     int error = 0;
 
     mp_uint_t size = mp_stream_rw(file->stream, (void *)pBuf, nBuf, &error, MP_STREAM_RW_WRITE);
-    if (size < 0) {
+    if (size != nBuf) {
         usqlite_errprintf("write error: %d", error);
     }
 
