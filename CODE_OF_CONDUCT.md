@@ -2,4 +2,4 @@
 
 * May the force be with you
 * Be excellent to each other
-* Live long and propser
+* Live long and propser 🖖
