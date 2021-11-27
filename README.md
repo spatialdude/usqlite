@@ -41,19 +41,13 @@ The database files created or used by `usqlite` are compatible with SQLite datab
 ---
 ## Getting Started
 
-The `usqlite` module is designed so it can be easily compiled and included in MicroPython builds alongside other [external modules](https://docs.micropython.org/en/latest/develop/cmodules.html).
+The `usqlite` module is designed so that it can be easily compiled and included in MicroPython builds alongside other [external modules](https://docs.micropython.org/en/latest/develop/cmodules.html).
 
-
-### SQLite C source code requirements
-
-The `usqlite` module source code repository currently does not include the **SQLite** C source code files. You will need to supply the SQLite C source files to build `uqsqlite`. Fortunately the required SQLite C source files are freely available for download from the 
-**SQLite** [Download](https://sqlite.org/download.html) page. 
-
-The [*amalagamated*](https://sqlite.org/amalgamation.html) version of the SQLite C source is required by `usqlite`. This simplifies the compilation requirements as only two of the SQLite C source files are needed by `usqlite`, namely `sqlite3.h` and `sqlite3.c` The default `usqlite` project configuration will `#include` these two SQLite C source files from a separate source directory.
+Version [**3.36.0**](https://sqlite.org/releaselog/3_36_0.html) of the [**SQLite** amalgamated source](https://sqlite.org/amalgamation.html) files `sqlite3.h` and `sqlite3.c` are included with the `usqlite` source code. These may be replaced with alternate or custom amalgamated versions built from the [canonical SQLite source code](https://sqlite.org/download.html).
 
 ### Project directory structure
 
-The directory structure used in the develoment of this module is as shown below. The SQLite C source files are `sqlite3.h` and `sqlite3.c` should be placed in the `sqlite` directory. The `usqlite` project can easily be modified to suit your own alternate project structure requirements with minor changes to the code. 
+The directory structure used in the develoment of this module is as shown below. The `usqlite` project can easily be modified to suit your own alternate project structure requirements with minor changes to the code. 
 
 
 ```
@@ -64,9 +58,6 @@ The directory structure used in the develoment of this module is as shown below.
         /usqlite            # μSQLite source code 
         ...
         ...
-    /sqlite                 # SQLite C amalgamated source code
-        sqlite3.h
-        sqlite3.c
 ```
 
 
