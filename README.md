@@ -91,6 +91,7 @@ Refer to the MicroPython's [Getting Started](https://github.com/micropython/micr
 * [Raspberry Pi Pico](https://github.com/spatialdude/usqlite/wiki/rp2)
 * [Unix](https://github.com/spatialdude/usqlite/wiki/unix)
 * [Windows](https://github.com/spatialdude/usqlite/wiki/windows)
+* [Pybricks for smart LEGO® hubs](https://github.com/spatialdude/usqlite/wiki/pybricks)
 
 
 ### Custom Configurations
