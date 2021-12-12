@@ -33,7 +33,7 @@ SOFTWARE.
 // ------------------------------------------------------------------------------
 
 bool usqlite_file_exists(const char *pathname) {
-    mp_obj_t os = mp_module_get(MP_QSTR_uos);
+    mp_obj_t os = mp_module_get_loaded_or_builtin(MP_QSTR_uos);
     mp_obj_t ilistdir = usqlite_method(os, MP_QSTR_ilistdir);
 
     char path[MAXPATHNAME + 1];
@@ -234,7 +234,7 @@ int usqlite_file_delete(const char *pathname) {
     usqlite_logprintf("%s: %s\n", __func__, pathname);
 
     mp_obj_t filename = mp_obj_new_str(pathname, strlen(pathname));
-    mp_obj_t remove = usqlite_method(mp_module_get(MP_QSTR_uos), MP_QSTR_remove);
+    mp_obj_t remove = usqlite_method(mp_module_get_loaded_or_builtin(MP_QSTR_uos), MP_QSTR_remove);
     mp_call_function_1(remove, filename);
 
     return SQLITE_OK;
