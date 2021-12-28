@@ -33,10 +33,15 @@ SOFTWARE.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-value"
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #pragma GCC diagnostic ignored "-Wempty-body"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+
+#ifdef __APPLE__
+#pragma GCC diagnostic ignored "-Wdouble-promotion"
+#else
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#endif
 #endif
 
 // ------------------------------------------------------------------------------

@@ -32,11 +32,12 @@ SOFTWARE.
 
 // ------------------------------------------------------------------------------
 
-typedef struct _usqlite_cursor_t usqlite_cursor_t;
+struct _usqlite_cursor_t;
 
+typedef struct _usqlite_cursor_t usqlite_cursor_t;
 typedef mp_obj_t (*usqlite_rowfactory_t)(usqlite_cursor_t *);
 
-typedef struct _usqlite_cursor_t
+struct _usqlite_cursor_t
 {
     mp_obj_base_t base;
     usqlite_connection_t *connection;
@@ -45,8 +46,7 @@ typedef struct _usqlite_cursor_t
     int rowcount;
     usqlite_rowfactory_t rowfactory;
     int arraysize;
-}
-usqlite_cursor_t;
+};
 
 // ------------------------------------------------------------------------------
 
