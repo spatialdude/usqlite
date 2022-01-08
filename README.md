@@ -52,12 +52,12 @@ The directory structure used in the develoment of this module is as shown below.
 
 ```
 ~/<projectroot>
-    /micropython            # MicroPython source code
-    /modules
-        micropython.cmake
-        /usqlite            # μSQLite source code 
-        ...
-        ...
+    ├── micropython            # MicroPython source code
+    └── modules
+        ├── micropython.cmake
+        ├── usqlite            # μSQLite source code 
+        ├── ...
+        └── ...
 ```
 
 
