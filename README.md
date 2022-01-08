@@ -125,11 +125,11 @@ The details in this section will describe differences and API features unique to
 
 |Name|Type|Description|
 |---|---|---|
-|`version`|`str`|`usqlite` module version string e.g. `"0.1.0"`|
-|`version_info`|`tuple`|`usqlite` module version tuple e.g `(0,1,0`)|
-|`sqlite_version`|`str`|SQLite version string e.g. `"3.36.0"`|
-|`sqlite_version_info`|`tuple`|SQLite version tuple e.g `(3,36,0`)|
-|`sqlite_version_number`|`int`|SQLite version number e.g `3036000`|
+|`version`|`str`|`usqlite` module version string e.g. `"0.1.2"`|
+|`version_info`|`tuple`|`usqlite` module version tuple e.g `(0,1,2`)|
+|`sqlite_version`|`str`|SQLite version string e.g. `"3.37.2"`|
+|`sqlite_version_info`|`tuple`|SQLite version tuple e.g `(3,37,2`)|
+|`sqlite_version_number`|`int`|SQLite version number e.g `3037002`|
 
 #### Functions
 
