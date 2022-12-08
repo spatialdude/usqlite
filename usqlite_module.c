@@ -123,7 +123,11 @@ STATIC mp_obj_t usqlite_connect(mp_obj_t filename) {
         MP_OBJ_FROM_PTR(db)
     };
 
+    #if defined(MP_OBJ_TYPE_GET_SLOT)
+    return MP_OBJ_TYPE_GET_SLOT(&usqlite_connection_type, make_new)(NULL, 1, 0, args);
+    #else
     return usqlite_connection_type.make_new(NULL, 1, 0, args);
+    #endif
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);
@@ -215,6 +219,10 @@ const mp_obj_module_t usqlite_module =
     .globals = (mp_obj_dict_t *)&usqlite_module_globals,
 };
 
+#if MICROPY_VERSION <= 0x11200
 MP_REGISTER_MODULE(MP_QSTR_usqlite, usqlite_module, 1);
+#else
+MP_REGISTER_MODULE(MP_QSTR_usqlite, usqlite_module);
+#endif
 
 // ------------------------------------------------------------------------------

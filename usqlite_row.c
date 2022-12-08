@@ -27,6 +27,8 @@ SOFTWARE.
 #include "py/objstr.h"
 #include "py/objtuple.h"
 
+STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);
+
 // ------------------------------------------------------------------------------
 
 void usqlite_row_type_initialize() {
@@ -36,8 +38,22 @@ void usqlite_row_type_initialize() {
         return;
     }
 
+    #if defined(MP_DEFINE_CONST_OBJ_TYPE)
+    usqlite_row_type.base.type = &mp_type_type;
+    usqlite_row_type.flags = MP_TYPE_FLAG_ITER_IS_GETITER;
+    usqlite_row_type.name = MP_QSTR_Row;
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, make_new, MP_OBJ_TYPE_GET_SLOT(&mp_type_tuple, make_new), 0);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, print, mp_obj_tuple_print, 1);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, unary_op, mp_obj_tuple_unary_op, 2);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, binary_op, mp_obj_tuple_binary_op, 3);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, attr, usqlite_row_attr, 4);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, subscr, mp_obj_tuple_subscr, 5);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, iter, mp_obj_tuple_getiter, 6);
+    MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, locals_dict, MP_OBJ_TYPE_GET_SLOT(&mp_type_tuple, locals_dict), 7);
+    #else
     usqlite_row_type.make_new = mp_type_tuple.make_new;
     usqlite_row_type.locals_dict = mp_type_tuple.locals_dict;
+    #endif
 
     initialized = 1;
 }
@@ -80,6 +96,9 @@ STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
 
 // ------------------------------------------------------------------------------
 
+#if defined(MP_DEFINE_CONST_OBJ_TYPE)
+mp_obj_full_type_t usqlite_row_type;
+#else
 mp_obj_type_t usqlite_row_type =
 {
     { &mp_type_type },
@@ -93,5 +112,6 @@ mp_obj_type_t usqlite_row_type =
     .locals_dict = NULL,
     .attr = usqlite_row_attr
 };
+#endif
 
 // ------------------------------------------------------------------------------

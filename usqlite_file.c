@@ -30,6 +30,8 @@ SOFTWARE.
 #include "py/stream.h"
 #include "py/builtin.h"
 
+extern mp_obj_module_t mp_module_io;
+
 // ------------------------------------------------------------------------------
 
 bool usqlite_file_exists(const char *pathname) {
@@ -57,8 +59,7 @@ bool usqlite_file_exists(const char *pathname) {
 
     bool exists = false;
     mp_obj_t listdir = mp_call_function_1(ilistdir, mp_obj_new_str(path, strlen(path)));
-    mp_obj_type_t *plistdir = MP_OBJ_TO_PTR(listdir);
-    mp_obj_t entry = plistdir->base.type->iternext(listdir);
+    mp_obj_t entry = mp_iternext(listdir);
 
     while (entry != MP_OBJ_STOP_ITERATION) {
         mp_obj_tuple_t *t = MP_OBJ_TO_PTR(entry);
@@ -71,7 +72,7 @@ bool usqlite_file_exists(const char *pathname) {
             }
         }
 
-        entry = plistdir->base.type->iternext(listdir);
+        entry = mp_iternext(listdir);
     }
 
 
