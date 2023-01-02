@@ -421,7 +421,7 @@ STATIC mp_obj_t row_type(usqlite_cursor_t *cursor) {
     int columns = sqlite3_data_count(cursor->stmt);
 
     mp_obj_tuple_t *o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns + 1);
-    o->base.type = &usqlite_row_type;
+    o->base.type = (mp_obj_type_t *)&usqlite_row_type;
     o->len = columns;
 
     o->items[columns] = MP_OBJ_FROM_PTR(cursor);
@@ -669,6 +669,23 @@ MP_DEFINE_CONST_DICT(usqlite_cursor_locals_dict, usqlite_cursor_locals_dict_tabl
 
 // ------------------------------------------------------------------------------
 
+#if defined(MP_DEFINE_CONST_OBJ_TYPE)
+STATIC const mp_getiter_iternext_custom_t usqlite_getiter_iternext = {
+    .getiter = usqlite_cursor_getiter,
+    .iternext = usqlite_cursor_iternext,
+};
+
+MP_DEFINE_CONST_OBJ_TYPE(
+    usqlite_cursor_type,
+    MP_QSTR_Cursor,
+    MP_TYPE_FLAG_ITER_IS_CUSTOM,
+    make_new, usqlite_cursor_make_new,
+    print, usqlite_cursor_print,
+    attr, usqlite_cursor_attr,
+    iter, &usqlite_getiter_iternext,
+    locals_dict, &usqlite_cursor_locals_dict
+    );
+#else
 const mp_obj_type_t usqlite_cursor_type =
 {
     { &mp_type_type },
@@ -680,5 +697,6 @@ const mp_obj_type_t usqlite_cursor_type =
     .locals_dict = (mp_obj_dict_t *)&usqlite_cursor_locals_dict,
     .attr = &usqlite_cursor_attr
 };
+#endif
 
 // ------------------------------------------------------------------------------

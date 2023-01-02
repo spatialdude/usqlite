@@ -105,7 +105,11 @@ STATIC mp_obj_t usqlite_connection_cursor(mp_obj_t self_in) {
         mp_const_none
     };
 
+    #if defined(MP_OBJ_TYPE_GET_SLOT)
+    return MP_OBJ_TYPE_GET_SLOT(&usqlite_cursor_type, make_new)(NULL, MP_ARRAY_SIZE(args), 0, args);
+    #else
     return usqlite_cursor_type.make_new(NULL, MP_ARRAY_SIZE(args), 0, args);
+    #endif
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_cursor_obj, usqlite_connection_cursor);
@@ -129,7 +133,11 @@ STATIC mp_obj_t usqlite_connection_execute(size_t n_args, const mp_obj_t *args) 
         nxargs++;
     }
 
+    #if defined(MP_OBJ_TYPE_GET_SLOT)
+    return MP_OBJ_TYPE_GET_SLOT(&usqlite_cursor_type, make_new)(NULL, nxargs, 0, xargs);
+    #else
     return usqlite_cursor_type.make_new(NULL, nxargs, 0, xargs);
+    #endif
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_execute_obj, 2, 3, usqlite_connection_execute);
@@ -146,7 +154,11 @@ STATIC mp_obj_t usqlite_connection_executemany(mp_obj_t self_in, mp_obj_t sql) {
         sql
     };
 
+    #if defined(MP_OBJ_TYPE_GET_SLOT)
+    return MP_OBJ_TYPE_GET_SLOT(&usqlite_cursor_type, make_new)(NULL, MP_ARRAY_SIZE(args), 0, args);
+    #else
     return usqlite_cursor_type.make_new(NULL, MP_ARRAY_SIZE(args), 0, args);
+    #endif
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_executemany_obj, usqlite_connection_executemany);
@@ -264,6 +276,17 @@ MP_DEFINE_CONST_DICT(usqlite_connection_locals_dict, usqlite_connection_locals_d
 
 // ------------------------------------------------------------------------------
 
+#if defined(MP_DEFINE_CONST_OBJ_TYPE)
+MP_DEFINE_CONST_OBJ_TYPE(
+    usqlite_connection_type,
+    MP_QSTR_Connection,
+    MP_TYPE_FLAG_NONE,
+    make_new, usqlite_connection_make_new,
+    print, usqlite_connection_print,
+    attr, usqlite_connection_attr,
+    locals_dict, &usqlite_connection_locals_dict
+    );
+#else
 const mp_obj_type_t usqlite_connection_type =
 {
     { &mp_type_type },
@@ -273,5 +296,6 @@ const mp_obj_type_t usqlite_connection_type =
     .locals_dict = (mp_obj_dict_t *)&usqlite_connection_locals_dict,
     .attr = usqlite_connection_attr,
 };
+#endif
 
 // ------------------------------------------------------------------------------

@@ -33,7 +33,11 @@ SOFTWARE.
 
 // ------------------------------------------------------------------------------
 
+#if defined(MP_DEFINE_CONST_OBJ_TYPE)
+extern mp_obj_full_type_t usqlite_row_type;
+#else
 extern mp_obj_type_t usqlite_row_type;
+#endif
 
 // ------------------------------------------------------------------------------
 
