@@ -37,11 +37,10 @@ SOFTWARE.
 #pragma GCC diagnostic ignored "-Wempty-body"
 #pragma GCC diagnostic ignored "-Wfloat-conversion"
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 #ifdef __APPLE__
-// GCC on macOS specific
-#else
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+// GCC on macOS 
 #endif
 #endif
 
