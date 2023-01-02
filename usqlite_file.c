@@ -30,7 +30,7 @@ SOFTWARE.
 #include "py/stream.h"
 #include "py/builtin.h"
 
-extern mp_obj_module_t mp_module_io;
+extern const mp_obj_module_t mp_module_io;
 
 // ------------------------------------------------------------------------------
 
