@@ -43,7 +43,7 @@ The database files created or used by `usqlite` are compatible with SQLite datab
 
 The `usqlite` module is designed so that it can be easily compiled and included in MicroPython builds alongside other [external modules](https://docs.micropython.org/en/latest/develop/cmodules.html).
 
-Version [**3.37.2**](https://sqlite.org/releaselog/3_37_2.html) of the [**SQLite** amalgamated source](https://sqlite.org/amalgamation.html) files `sqlite3.h` and `sqlite3.c` are included with the `usqlite` source code. These may be replaced with alternate or custom amalgamated versions built from the [canonical SQLite source code](https://sqlite.org/download.html).
+Version [**3.40.1**](https://sqlite.org/releaselog/3_40_1.html) of the [**SQLite** amalgamated source](https://sqlite.org/amalgamation.html) files `sqlite3.h` and `sqlite3.c` are included with the `usqlite` source code. These may be replaced with alternate or custom amalgamated versions built from the [canonical SQLite source code](https://sqlite.org/download.html).
 
 ### Project directory structure
 
