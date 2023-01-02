@@ -98,9 +98,43 @@ void usqlite_raise(sqlite3 *db, const char *msg) {
 
 // ------------------------------------------------------------------------------
 
+#define TYPE_HAS_ITERNEXT(type) (type->flags & (MP_TYPE_FLAG_ITER_IS_ITERNEXT | MP_TYPE_FLAG_ITER_IS_CUSTOM | MP_TYPE_FLAG_ITER_IS_STREAM))
+
 bool usqlite_lookup(mp_obj_t obj, qstr attr, mp_obj_t *dest) {
-    mp_load_method_maybe(obj, attr, dest);
-    return dest[0] != MP_OBJ_NULL;
+
+    //    mp_load_method_maybe(obj, attr, dest);
+    //    return dest[0] != MP_OBJ_NULL;
+
+    const mp_obj_type_t* type = mp_obj_get_type(obj);
+
+    // look for built-in names
+#if MICROPY_CPYTHON_COMPAT
+    if (attr == MP_QSTR___class__) {
+        // a.__class__ is equivalent to type(a)
+        dest[0] = MP_OBJ_FROM_PTR(type);
+        return true;
+    }
+#endif
+
+    if (attr == MP_QSTR___next__ && TYPE_HAS_ITERNEXT(type)) {
+        dest[0] = MP_OBJ_FROM_PTR(&mp_builtin_next_obj);
+        dest[1] = obj;
+        return true;
+    }
+
+    if (MP_OBJ_TYPE_HAS_SLOT(type, locals_dict)) {
+        // generic method lookup
+        // this is a lookup in the object (ie not class or type)
+        assert(MP_OBJ_TYPE_GET_SLOT(type, locals_dict)->base.type == &mp_type_dict); // MicroPython restriction, for now
+        mp_map_t* locals_map = &MP_OBJ_TYPE_GET_SLOT(type, locals_dict)->map;
+        mp_map_elem_t* elem = mp_map_lookup(locals_map, MP_OBJ_NEW_QSTR(attr), MP_MAP_LOOKUP);
+        if (elem != NULL) {
+            mp_convert_member_lookup(obj, type, elem->value, dest);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // ------------------------------------------------------------------------------
