@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021 Elvin Slavik
+Copyright(c) 2021-2023 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -63,9 +63,7 @@ void usqlite_row_type_initialize() {
 STATIC mp_obj_t keys(usqlite_cursor_t *cursor) {
     int columns = sqlite3_data_count(cursor->stmt);
 
-    mp_obj_tuple_t *o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
-    o->base.type = &mp_type_tuple;
-    o->len = columns;
+    mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
 
     for (int i = 0; i < columns; i++)
     {

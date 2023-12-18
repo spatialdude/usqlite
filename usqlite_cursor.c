@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021 Elvin Slavik
+Copyright(c) 2021-2023 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -403,9 +403,7 @@ STATIC mp_obj_t row_dict(usqlite_cursor_t *cursor) {
 STATIC mp_obj_t row_tuple(usqlite_cursor_t *cursor) {
     int columns = sqlite3_data_count(cursor->stmt);
 
-    mp_obj_tuple_t *o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
-    o->base.type = &mp_type_tuple;
-    o->len = columns;
+    mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
 
     for (int i = 0; i < columns; i++)
     {
@@ -420,9 +418,7 @@ STATIC mp_obj_t row_tuple(usqlite_cursor_t *cursor) {
 STATIC mp_obj_t row_type(usqlite_cursor_t *cursor) {
     int columns = sqlite3_data_count(cursor->stmt);
 
-    mp_obj_tuple_t *o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns + 1);
-    o->base.type = (mp_obj_type_t *)&usqlite_row_type;
-    o->len = columns;
+    mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns + 1, NULL));
 
     o->items[columns] = MP_OBJ_FROM_PTR(cursor);
 
@@ -540,15 +536,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_cursor_fetchall_obj, usqlite_cursor_fet
 STATIC mp_obj_t usqlite_cursor_description(sqlite3_stmt *stmt) {
     int columns = sqlite3_data_count(stmt);
 
-    mp_obj_tuple_t *o = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, columns);
-    o->base.type = &mp_type_tuple;
-    o->len = columns;
+    mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
 
     for (int i = 0; i < columns; i++)
     {
-        mp_obj_tuple_t *c = m_new_obj_var(mp_obj_tuple_t, mp_obj_t, 7);
-        c->base.type = &mp_type_tuple;
-        c->len = 7;
+        mp_obj_tuple_t *c = MP_OBJ_TO_PTR(mp_obj_new_tuple(7, NULL));
 
         c->items[0] = usqlite_column_name(stmt, i);
         #ifndef SQLITE_OMIT_DECLTYPE
