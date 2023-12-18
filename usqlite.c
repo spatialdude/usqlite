@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021 Elvin Slavik
+Copyright(c) 2021-2023 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -38,6 +38,7 @@ SOFTWARE.
 #pragma GCC diagnostic ignored "-Wfloat-conversion"
 #pragma GCC diagnostic ignored "-Wdouble-promotion"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 
 #ifdef __APPLE__
 // GCC on macOS 
