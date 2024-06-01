@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021-2023 Elvin Slavik
+Copyright(c) 2024 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -27,7 +27,7 @@ SOFTWARE.
 #include "py/objstr.h"
 #include "py/objtuple.h"
 
-STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);
+static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);
 
 // ------------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ void usqlite_row_type_initialize() {
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t keys(usqlite_cursor_t *cursor) {
+static mp_obj_t keys(usqlite_cursor_t *cursor) {
     int columns = sqlite3_data_count(cursor->stmt);
 
     mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
@@ -75,7 +75,7 @@ STATIC mp_obj_t keys(usqlite_cursor_t *cursor) {
 
 // ------------------------------------------------------------------------------
 
-STATIC void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
+static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
     if (dest[0] == MP_OBJ_NULL) {
         if ((usqlite_lookup(self_in, attr, dest))) {
             return;

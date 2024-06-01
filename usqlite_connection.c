@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021 Elvin Slavik
+Copyright(c) 2024 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -28,11 +28,11 @@ SOFTWARE.
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in);
+static mp_obj_t usqlite_connection_close(mp_obj_t self_in);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
+static mp_obj_t usqlite_connection_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
     usqlite_connection_t *self = m_new_obj(usqlite_connection_t);
 
     self->base.type = &usqlite_connection_type;
@@ -45,7 +45,7 @@ STATIC mp_obj_t usqlite_connection_make_new(const mp_obj_type_t *type, size_t n_
 
 // ------------------------------------------------------------------------------
 
-STATIC void usqlite_connection_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
+static void usqlite_connection_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     usqlite_connection_t *self = MP_OBJ_TO_PTR(self_in);
 
     mp_printf(print, "<%s '%s'>", mp_obj_get_type_str(self_in), self->db ? sqlite3_db_filename(self->db, NULL) : "");
@@ -53,7 +53,7 @@ STATIC void usqlite_connection_print(const mp_print_t *print, mp_obj_t self_in, 
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
+static mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
     LOGFUNC;
 
     usqlite_connection_t *self = (usqlite_connection_t *)MP_OBJ_TO_PTR(self_in);
@@ -84,7 +84,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_close_obj, usqlite_connection_close
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_del(mp_obj_t self_in) {
+static mp_obj_t usqlite_connection_del(mp_obj_t self_in) {
     usqlite_logprintf(___FUNC___, "\n");
 
     usqlite_connection_close(self_in);
@@ -96,7 +96,7 @@ MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_del_obj, usqlite_connection_del);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_cursor(mp_obj_t self_in) {
+static mp_obj_t usqlite_connection_cursor(mp_obj_t self_in) {
     usqlite_connection_t *self = MP_OBJ_TO_PTR(self_in);
 
     mp_obj_t args[2] =
@@ -112,11 +112,11 @@ STATIC mp_obj_t usqlite_connection_cursor(mp_obj_t self_in) {
     #endif
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_cursor_obj, usqlite_connection_cursor);
+static MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connection_cursor_obj, usqlite_connection_cursor);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_execute(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t usqlite_connection_execute(size_t n_args, const mp_obj_t *args) {
     usqlite_connection_t *self = MP_OBJ_TO_PTR(args[0]);
 
     mp_obj_t xargs[4] =
@@ -140,11 +140,11 @@ STATIC mp_obj_t usqlite_connection_execute(size_t n_args, const mp_obj_t *args) 
     #endif
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_execute_obj, 2, 3, usqlite_connection_execute);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_execute_obj, 2, 3, usqlite_connection_execute);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_executemany(mp_obj_t self_in, mp_obj_t sql) {
+static mp_obj_t usqlite_connection_executemany(mp_obj_t self_in, mp_obj_t sql) {
     usqlite_connection_t *self = MP_OBJ_TO_PTR(self_in);
 
     mp_obj_t args[3] =
@@ -161,11 +161,11 @@ STATIC mp_obj_t usqlite_connection_executemany(mp_obj_t self_in, mp_obj_t sql) {
     #endif
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_executemany_obj, usqlite_connection_executemany);
+static MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_executemany_obj, usqlite_connection_executemany);
 
 // ------------------------------------------------------------------------------
 
-STATIC int traceCallback(unsigned uMask, void *context, void *p, void *x) {
+static int traceCallback(unsigned uMask, void *context, void *p, void *x) {
     usqlite_connection_t *self = (usqlite_connection_t *)context;
     sqlite3_stmt *stmt = (sqlite3_stmt *)p;
     char *xsql = sqlite3_expanded_sql(stmt);
@@ -180,7 +180,7 @@ STATIC int traceCallback(unsigned uMask, void *context, void *p, void *x) {
     return 0;
 }
 
-STATIC mp_obj_t usqlite_connection_set_trace_callback(mp_obj_t self_in, mp_obj_t callback) {
+static mp_obj_t usqlite_connection_set_trace_callback(mp_obj_t self_in, mp_obj_t callback) {
     usqlite_connection_t *self = MP_OBJ_TO_PTR(self_in);
 
     if (callback == mp_const_none) {
@@ -196,7 +196,7 @@ STATIC mp_obj_t usqlite_connection_set_trace_callback(mp_obj_t self_in, mp_obj_t
     return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_set_trace_callback_obj, usqlite_connection_set_trace_callback);
+static MP_DEFINE_CONST_FUN_OBJ_2(usqlite_connection_set_trace_callback_obj, usqlite_connection_set_trace_callback);
 
 // ------------------------------------------------------------------------------
 
@@ -214,7 +214,7 @@ void usqlite_connection_deregister(usqlite_connection_t *connection, mp_obj_t cu
 
 // ------------------------------------------------------------------------------
 
-STATIC void usqlite_connection_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
+static void usqlite_connection_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
     usqlite_connection_t *self = (usqlite_connection_t *)self_in;
 
     if (dest[0] == MP_OBJ_NULL) {
@@ -247,7 +247,7 @@ STATIC void usqlite_connection_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest)
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connection_exit(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t usqlite_connection_exit(size_t n_args, const mp_obj_t *args) {
     usqlite_logprintf(___FUNC___ "\n");
 
     usqlite_connection_close(args[0]);
@@ -255,11 +255,11 @@ STATIC mp_obj_t usqlite_connection_exit(size_t n_args, const mp_obj_t *args) {
     return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_exit_obj, 4, 4, usqlite_connection_exit);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_connection_exit_obj, 4, 4, usqlite_connection_exit);
 
 // ------------------------------------------------------------------------------
 
-STATIC const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] =
+static const mp_rom_map_elem_t usqlite_connection_locals_dict_table[] =
 {
     { MP_ROM_QSTR(MP_QSTR___del__),             MP_ROM_PTR(&usqlite_connection_del_obj) },
     { MP_ROM_QSTR(MP_QSTR___enter__),           MP_ROM_PTR(&mp_identity_obj) },

@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021 Elvin Slavik
+Copyright(c) 2024 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -34,9 +34,9 @@ SOFTWARE.
 
 // ------------------------------------------------------------------------------
 
-STATIC const MP_DEFINE_STR_OBJ(usqlite_version, USQLITE_VERSION);
+static const MP_DEFINE_STR_OBJ(usqlite_version, USQLITE_VERSION);
 
-STATIC const mp_rom_obj_tuple_t usqlite_version_info = {
+static const mp_rom_obj_tuple_t usqlite_version_info = {
     { &mp_type_tuple },
     3,
     {
@@ -47,13 +47,13 @@ STATIC const mp_rom_obj_tuple_t usqlite_version_info = {
 };
 
 
-STATIC const MP_DEFINE_STR_OBJ(sqlite_version, SQLITE_VERSION);
+static const MP_DEFINE_STR_OBJ(sqlite_version, SQLITE_VERSION);
 
 #define SQLITE_VERSION_MAJOR  (int)(SQLITE_VERSION_NUMBER / 1000000)
 #define SQLITE_VERSION_MINOR  (int)((SQLITE_VERSION_NUMBER - SQLITE_VERSION_MAJOR * 1000000) / 1000)
 #define SQLITE_VERSION_MICRO  (SQLITE_VERSION_NUMBER - SQLITE_VERSION_MAJOR * 1000000 - SQLITE_VERSION_MINOR * 1000)
 
-STATIC const mp_rom_obj_tuple_t sqlite_version_info = {
+static const mp_rom_obj_tuple_t sqlite_version_info = {
     { &mp_type_tuple },
     3,
     {
@@ -65,7 +65,7 @@ STATIC const mp_rom_obj_tuple_t sqlite_version_info = {
 
 // ------------------------------------------------------------------------------
 
-STATIC void initialize() {
+static void initialize() {
     static int initialized = 0;
 
     if (initialized) {
@@ -85,7 +85,7 @@ STATIC void initialize() {
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_init(void) {
+static mp_obj_t usqlite_init(void) {
     LOGFUNC;
 
     // initialize();
@@ -93,11 +93,11 @@ STATIC mp_obj_t usqlite_init(void) {
     return mp_const_none;
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(usqlite_init_obj, usqlite_init);
+static MP_DEFINE_CONST_FUN_OBJ_0(usqlite_init_obj, usqlite_init);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_connect(mp_obj_t filename) {
+static mp_obj_t usqlite_connect(mp_obj_t filename) {
     initialize();
 
     const char *pFilename = mp_obj_str_get_str(filename);
@@ -130,19 +130,19 @@ STATIC mp_obj_t usqlite_connect(mp_obj_t filename) {
     #endif
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);
+static MP_DEFINE_CONST_FUN_OBJ_1(usqlite_connect_obj, usqlite_connect);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_complete_statement(mp_obj_t sql) {
+static mp_obj_t usqlite_complete_statement(mp_obj_t sql) {
     return mp_obj_new_bool(sqlite3_complete(mp_obj_str_get_str(sql)));
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(usqlite_complete_statement_obj, usqlite_complete_statement);
+static MP_DEFINE_CONST_FUN_OBJ_1(usqlite_complete_statement_obj, usqlite_complete_statement);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t *args) {
     initialize();
 
     int reset = 0;
@@ -155,11 +155,11 @@ STATIC mp_obj_t usqlite_mem_peak(size_t n_args, const mp_obj_t *args) {
     return mp_obj_new_int_from_ll(mem);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_peak_obj, 0, 1, usqlite_mem_peak);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_peak_obj, 0, 1, usqlite_mem_peak);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t *args) {
+static mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t *args) {
     static int mem_status = SQLITE_DEFAULT_MEMSTATUS;
 
     if (n_args > 0) {
@@ -173,11 +173,11 @@ STATIC mp_obj_t usqlite_mem_status(size_t n_args, const mp_obj_t *args) {
     return mp_obj_new_bool(mem_status);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_status_obj, 0, 1, usqlite_mem_status);
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(usqlite_mem_status_obj, 0, 1, usqlite_mem_status);
 
 // ------------------------------------------------------------------------------
 
-STATIC mp_obj_t usqlite_mem_current(void) {
+static mp_obj_t usqlite_mem_current(void) {
     initialize();
 
     sqlite3_int64 mem = sqlite3_memory_used();
@@ -185,11 +185,11 @@ STATIC mp_obj_t usqlite_mem_current(void) {
     return mp_obj_new_int_from_ll(mem);
 }
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(usqlite_mem_current_obj, usqlite_mem_current);
+static MP_DEFINE_CONST_FUN_OBJ_0(usqlite_mem_current_obj, usqlite_mem_current);
 
 // ------------------------------------------------------------------------------
 
-STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
+static const mp_rom_map_elem_t usqlite_module_globals_table[] =
 {
     { MP_ROM_QSTR(MP_QSTR___name__),                MP_ROM_QSTR(MP_QSTR_usqlite) },
     { MP_ROM_QSTR(MP_QSTR___init__),                MP_ROM_PTR(&usqlite_init_obj) },
@@ -209,7 +209,7 @@ STATIC const mp_rom_map_elem_t usqlite_module_globals_table[] =
     { MP_ROM_QSTR(MP_QSTR_mem_status),              MP_ROM_PTR(&usqlite_mem_status_obj) },
 };
 
-STATIC MP_DEFINE_CONST_DICT(usqlite_module_globals, usqlite_module_globals_table);
+static MP_DEFINE_CONST_DICT(usqlite_module_globals, usqlite_module_globals_table);
 
 // ------------------------------------------------------------------------------
 
