@@ -43,7 +43,7 @@ The database files created or used by `usqlite` are compatible with SQLite datab
 
 The `usqlite` module is designed so that it can be easily compiled and included in MicroPython builds alongside other [external modules](https://docs.micropython.org/en/latest/develop/cmodules.html).
 
-Version [**3.44.2**](https://sqlite.org/releaselog/3_44_2.html) of the [**SQLite** amalgamated source](https://sqlite.org/amalgamation.html) files `sqlite3.h` and `sqlite3.c` are included with the `usqlite` source code. These may be replaced with alternate or custom amalgamated versions built from the [canonical SQLite source code](https://sqlite.org/download.html).
+Version [**3.44.2**](https://sqlite.org/releaselog/3_46_0.html) of the [**SQLite** amalgamated source](https://sqlite.org/amalgamation.html) files `sqlite3.h` and `sqlite3.c` are included with the `usqlite` source code. These may be replaced with alternate or custom amalgamated versions built from the [canonical SQLite source code](https://sqlite.org/download.html).
 
 ### Project directory structure
 
@@ -125,11 +125,11 @@ The details in this section will describe differences and API features unique to
 
 |Name|Type|Description|
 |---|---|---|
-|`version`|`str`|`usqlite` module version string e.g. `"0.1.2"`|
-|`version_info`|`tuple`|`usqlite` module version tuple e.g `(0,1,2`)|
-|`sqlite_version`|`str`|SQLite version string e.g. `"3.37.2"`|
-|`sqlite_version_info`|`tuple`|SQLite version tuple e.g `(3,37,2`)|
-|`sqlite_version_number`|`int`|SQLite version number e.g `3037002`|
+|`version`|`str`|`usqlite` module version string e.g. `"0.1.5"`|
+|`version_info`|`tuple`|`usqlite` module version tuple e.g `(0,1,5`)|
+|`sqlite_version`|`str`|SQLite version string e.g. `"3.46.0"`|
+|`sqlite_version_info`|`tuple`|SQLite version tuple e.g `(3,46,0`)|
+|`sqlite_version_number`|`int`|SQLite version number e.g `3046000`|
 
 #### Functions
 

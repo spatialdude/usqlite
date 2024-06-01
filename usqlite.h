@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright(c) 2021 Elvin Slavik
+Copyright(c) 2024 Elvin Slavik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this softwareand associated documentation files(the "Software"), to deal
@@ -44,7 +44,7 @@ SOFTWARE.
 
 #define USQLITE_VERSION_MAJOR   0
 #define USQLITE_VERSION_MINOR   1
-#define USQLITE_VERSION_MICRO   4
+#define USQLITE_VERSION_MICRO   5
 
 #define USQLITE_VERSION         STRINGIFY(USQLITE_VERSION_MAJOR) "." STRINGIFY(USQLITE_VERSION_MINOR) "." STRINGIFY(USQLITE_VERSION_MICRO)
 
