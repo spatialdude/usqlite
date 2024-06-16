@@ -207,6 +207,8 @@ static const mp_rom_map_elem_t usqlite_module_globals_table[] =
     { MP_ROM_QSTR(MP_QSTR_mem_peak),                MP_ROM_PTR(&usqlite_mem_peak_obj) },
     { MP_ROM_QSTR(MP_QSTR_mem_current),             MP_ROM_PTR(&usqlite_mem_current_obj) },
     { MP_ROM_QSTR(MP_QSTR_mem_status),              MP_ROM_PTR(&usqlite_mem_status_obj) },
+
+    { MP_ROM_QSTR(MP_QSTR_usqlite_Error),           MP_ROM_PTR(&usqlite_Error) },
 };
 
 static MP_DEFINE_CONST_DICT(usqlite_module_globals, usqlite_module_globals_table);
