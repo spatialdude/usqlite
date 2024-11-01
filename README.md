@@ -3,7 +3,7 @@
 **WARNING**: This project is in the beta development stage and may be subject to change.
 
 
-`usqlite` is a SQL database library module for MicroPython built on the popular [SQLite C library](https://sqlite.org/).
+`usqlite` is a SQL database library module for [MicroPython](https://github.com/micropython/micropython) built on the popular [SQLite C library](https://sqlite.org/).
 
 The `usqlite` SQL interface is designed to be a subset of the DB-API 2.0 specification as specified by [**PEP 249**](https://www.python.org/dev/peps/pep-0249). The `usqlite` API interface is also highly compatible with the standard [**`sqlite3`**](https://docs.python.org/3/library/sqlite3.html) library for Python with a few extra features.
 
