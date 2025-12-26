@@ -27,7 +27,7 @@ SOFTWARE.
 #include "py/objstr.h"
 #include "py/objtuple.h"
 
-static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest);
+static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest);
 
 // ------------------------------------------------------------------------------
 
@@ -38,7 +38,7 @@ void usqlite_row_type_initialize() {
         return;
     }
 
-    #if defined(MP_DEFINE_CONST_OBJ_TYPE)
+#if defined(MP_DEFINE_CONST_OBJ_TYPE)
     usqlite_row_type.base.type = &mp_type_type;
     usqlite_row_type.flags = MP_TYPE_FLAG_ITER_IS_GETITER;
     usqlite_row_type.name = MP_QSTR_Row;
@@ -50,20 +50,24 @@ void usqlite_row_type_initialize() {
     MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, subscr, mp_obj_tuple_subscr, 5);
     MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, iter, mp_obj_tuple_getiter, 6);
     MP_OBJ_TYPE_SET_SLOT(&usqlite_row_type, locals_dict, MP_OBJ_TYPE_GET_SLOT(&mp_type_tuple, locals_dict), 7);
-    #else
+#else
     usqlite_row_type.make_new = mp_type_tuple.make_new;
     usqlite_row_type.locals_dict = mp_type_tuple.locals_dict;
-    #endif
+#endif
 
     initialized = 1;
 }
 
 // ------------------------------------------------------------------------------
 
-static mp_obj_t keys(usqlite_cursor_t *cursor) {
+static mp_obj_t keys(usqlite_cursor_t* cursor) {
+    if (!cursor || !cursor->stmt) {
+        return mp_const_none;
+    }
+
     int columns = sqlite3_data_count(cursor->stmt);
 
-    mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
+    mp_obj_tuple_t* o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
 
     for (int i = 0; i < columns; i++)
     {
@@ -75,19 +79,25 @@ static mp_obj_t keys(usqlite_cursor_t *cursor) {
 
 // ------------------------------------------------------------------------------
 
-static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
+static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t* dest) {
     if (dest[0] == MP_OBJ_NULL) {
         if ((usqlite_lookup(self_in, attr, dest))) {
             return;
         }
 
-        mp_obj_tuple_t *self = (mp_obj_tuple_t *)self_in;
+        mp_obj_tuple_t* self = (mp_obj_tuple_t*)self_in;
 
         switch (attr)
         {
-            case MP_QSTR_keys:
-                dest[0] = keys(self->items[self->len]);
-                break;
+        case MP_QSTR_keys:
+            // Validate that the tuple has the cursor pointer
+            if (self->len > 0 && self->items[self->len - 1] != MP_OBJ_NULL) {
+                usqlite_cursor_t* cursor = MP_OBJ_TO_PTR(self->items[self->len - 1]);
+                if (cursor && cursor->stmt) {
+                    dest[0] = keys(cursor);
+                }
+            }
+            break;
         }
     }
 }

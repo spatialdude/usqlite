@@ -56,30 +56,32 @@ SOFTWARE.
 #endif
 
 #ifdef SQLITE_OMIT_ANALYZE
-SQLITE_PRIVATE void sqlite3Analyze(Parse *pParse, Token *pName1, Token *pName2) {
+SQLITE_PRIVATE void sqlite3Analyze(Parse* pParse, Token* pName1, Token* pName2) {
 }
 
 #if __GNUC__
-SQLITE_PRIVATE int sqlite3AnalysisLoad(sqlite3 *db, int iDB) {
+SQLITE_PRIVATE int sqlite3AnalysisLoad(sqlite3* db, int iDB) {
+    return SQLITE_OK;
 }
-SQLITE_PRIVATE void sqlite3DeleteIndexSamples(sqlite3 *db, Index *pIdx) {
+SQLITE_PRIVATE void sqlite3DeleteIndexSamples(sqlite3* db, Index* pIdx) {
 }
 #endif
 #endif
 
 #ifdef SQLITE_OMIT_ATTACH
-SQLITE_PRIVATE void sqlite3Vacuum(Parse *p, Token *t, Expr *e) {
+SQLITE_PRIVATE void sqlite3Vacuum(Parse* p, Token* t, Expr* e) {
 }
-SQLITE_PRIVATE int sqlite3DbIsNamed(sqlite3 *db, int iDb, const char *zName) {
+SQLITE_PRIVATE int sqlite3DbIsNamed(sqlite3* db, int iDb, const char* zName) {
     return 0;
 }
-SQLITE_PRIVATE void sqlite3Attach(Parse *p, Expr *e1, Expr *e2, Expr *e3) {
+SQLITE_PRIVATE void sqlite3Attach(Parse* p, Expr* e1, Expr* e2, Expr* e3) {
 }
-SQLITE_PRIVATE void sqlite3Detach(Parse *p, Expr *e) {
+SQLITE_PRIVATE void sqlite3Detach(Parse* p, Expr* e) {
 }
 
 #ifdef __GNUC__
-SQLITE_PRIVATE int sqlite3RunVacuum(char **c, sqlite3 *db, int i, sqlite3_value *v) {
+SQLITE_PRIVATE int sqlite3RunVacuum(char** c, sqlite3* db, int i, sqlite3_value* v) {
+    return SQLITE_OK;
 }
 #endif
 #endif
