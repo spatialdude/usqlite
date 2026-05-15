@@ -161,7 +161,7 @@ static int bindParameter(sqlite3_stmt *stmt, int index, mp_obj_t value) {
     } else if (mp_obj_is_str(value)) {
         GET_STR_DATA_LEN(value, str, nstr);
         return sqlite3_bind_text(stmt, index, (const char *)str, nstr, NULL);
-    } else if (mp_obj_is_type(value, &mp_type_float)) {
+    } else if (mp_obj_is_float(value)) {
         return sqlite3_bind_double(stmt, index, mp_obj_get_float(value));
     } else if (mp_obj_is_type(value, &mp_type_bytes)) {
         GET_STR_DATA_LEN(value, bytes, nbytes);
