@@ -32,26 +32,39 @@ SOFTWARE.
 
 #if defined(SQLITE_ZERO_MALLOC) && defined(SQLITE_ENABLE_MEMSYS5)
 
-static mp_obj_t sqlite_heap;
+// The one dedicated heap for the whole SQLite engine, handed to SQLite via
+// SQLITE_CONFIG_HEAP so every SQLite allocation lives inside it. To the
+// MicroPython GC this is a single block: it never sees, and so never frees,
+// SQLite's internal allocations -- which is what makes gc.collect() (explicit
+// or automatic) safe while a connection is open. Held in a GC root so the
+// collector keeps the block for the session; a soft reset clears the root and
+// hands the RAM back.
+MP_REGISTER_ROOT_POINTER(void *usqlite_heap);
 
 // ------------------------------------------------------------------------------
 
 void usqlite_mem_init(void) {
     LOGFUNC;
-    // usqlite_logprintf("usqlite_init\n");
 
-    usqlite_logprintf("zero malloc heap: %d\n", MEMSYS5_HEAP_SIZE);
-
-    void *heap = m_malloc(MEMSYS5_HEAP_SIZE);
-    if (!heap) {
-        mp_raise_msg_varg(&usqlite_Error, MP_ERROR_TEXT("Failed to alloc heap: %d"), HEAP_SIZE);
+    // Reserve lazily and once. usqlite_mem_init() runs from the module's
+    // initialize(), which fires on the first connect() -- so a program that
+    // never opens a database reserves nothing.
+    if (MP_STATE_VM(usqlite_heap)) {
         return;
     }
 
-    LOGLINE;
-    sqlite_heap = MP_OBJ_FROM_PTR(heap);
-    sqlite3_config(SQLITE_CONFIG_HEAP, heap, HEAP_SIZE, 0);
-    LOGLINE;
+    void *heap = m_malloc_maybe(MEMSYS5_HEAP_SIZE);
+    if (!heap) {
+        mp_raise_msg_varg(&usqlite_Error,
+            MP_ERROR_TEXT("cannot reserve %d bytes for the SQLite engine"),
+            MEMSYS5_HEAP_SIZE);
+    }
+
+    MP_STATE_VM(usqlite_heap) = heap;
+    // Third arg is MEMSYS5's minimum allocation (atom) size: it must be a sane
+    // power of two, not 0 -- 0 becomes a 1-byte atom and cripples the buddy
+    // allocator with control overhead. 64 bytes is in SQLite's recommended range.
+    sqlite3_config(SQLITE_CONFIG_HEAP, heap, MEMSYS5_HEAP_SIZE, 64);
 }
 #endif
 

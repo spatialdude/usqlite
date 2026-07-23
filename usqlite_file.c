@@ -26,11 +26,48 @@ SOFTWARE.
 
 #include "py/objstr.h"
 #include "py/objmodule.h"
+#include "py/objlist.h"
 #include "py/runtime.h"
 #include "py/stream.h"
 #include "py/builtin.h"
 
 extern const mp_obj_module_t mp_module_io;
+
+// ------------------------------------------------------------------------------
+
+// Every open database file is a MicroPython stream object (io.open()), but the
+// only pointer to it lives inside SQLite's sqlite3_file, which SQLite allocates
+// from its own dedicated heap. The GC does not walk SQLite's heap as object
+// memory, so without a strong reference here the stream can be collected out
+// from under an open connection -- a use-after-free that surfaces only after a
+// gc.collect(), and only on some memory layouts. Pin every open stream in a
+// GC-visible list held from a root pointer; unpin on close.
+MP_REGISTER_ROOT_POINTER(mp_obj_t usqlite_files);
+
+static void usqlite_file_pin(mp_obj_t stream) {
+    if (!MP_STATE_VM(usqlite_files)) {
+        MP_STATE_VM(usqlite_files) = mp_obj_new_list(0, NULL);
+    }
+    mp_obj_list_append(MP_STATE_VM(usqlite_files), stream);
+}
+
+static void usqlite_file_unpin(mp_obj_t stream) {
+    mp_obj_t lst = MP_STATE_VM(usqlite_files);
+    if (!lst) {
+        return;
+    }
+    // Swap-remove by identity; never raises (mp_obj_list_remove would, and this
+    // runs on the close/finalize path where a raise must not happen).
+    mp_obj_list_t *l = MP_OBJ_TO_PTR(lst);
+    for (size_t i = 0; i < l->len; i++) {
+        if (l->items[i] == stream) {
+            l->items[i] = l->items[l->len - 1];
+            l->items[l->len - 1] = MP_OBJ_NULL;
+            l->len--;
+            return;
+        }
+    }
+}
 
 // ------------------------------------------------------------------------------
 
@@ -113,6 +150,7 @@ int usqlite_file_open(MPFILE *file, const char *pathname, int flags) {
 
     mp_obj_t open = usqlite_method(&mp_module_io, MP_QSTR_open);
     file->stream = mp_call_function_2(open, filename, filemode);
+    usqlite_file_pin(file->stream);
     strcpy(file->pathname, pathname);
     file->flags = flags;
 
@@ -140,6 +178,7 @@ int usqlite_file_close(MPFILE *file) {
         usqlite_logprintf(___FUNC___ " %s\n", file->pathname);
 
         mp_stream_close(file->stream);
+        usqlite_file_unpin(file->stream);
         file->stream = NULL;
 
         if (file->flags & SQLITE_OPEN_DELETEONCLOSE) {

@@ -69,12 +69,30 @@ SOFTWARE.
 
 // ------------------------------------------------------------------------------
 
+// Give SQLite one dedicated heap (MEMSYS5) instead of a GC-heap allocation per
+// call. The per-call allocator (gc_alloc) puts SQLite's structures on the
+// MicroPython GC heap, where the conservative collector cannot follow SQLite's
+// interior/tagged pointers and frees live memory on any gc.collect() under an
+// open connection -- corrupting the database or hanging the board. One pooled
+// block is opaque to the GC and fixes both. See usqlite_mem.c.
 #ifdef SQLITE_ZERO_MALLOC
-// #define SQLITE_ENABLE_MEMSYS5 1
+#define SQLITE_ENABLE_MEMSYS5 1
 #endif
 
 #ifdef SQLITE_ENABLE_MEMSYS5
-#define MEMSYS5_HEAP_SIZE               128 * 1024
+// Size of that pool, reserved lazily on the first connect() (see
+// usqlite_mem.c), so a program that never opens a database pays nothing. Small
+// by default so it fits constrained targets -- a plain RP2040 or ESP32 has only
+// a few hundred KB of RAM -- and raised per board where there is room:
+//   -DMEMSYS5_HEAP_SIZE=0x400000   (e.g. 4 MB on a board with PSRAM)
+#ifndef MEMSYS5_HEAP_SIZE
+#define MEMSYS5_HEAP_SIZE               (128 * 1024)
+#endif
+// Page cache defaults to half the pool (negative = KiB) so it always fits
+// inside it and scales with MEMSYS5_HEAP_SIZE; override to tune.
+#ifndef SQLITE_DEFAULT_CACHE_SIZE
+#define SQLITE_DEFAULT_CACHE_SIZE       (-(MEMSYS5_HEAP_SIZE / 2048))
+#endif
 #endif
 
 // ------------------------------------------------------------------------------
