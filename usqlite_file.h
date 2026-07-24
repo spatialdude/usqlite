@@ -45,6 +45,7 @@ MPFILE;
 // ------------------------------------------------------------------------------
 
 bool usqlite_file_exists(const char *filepath);
+bool usqlite_file_accessible(const char *pathname);
 int usqlite_file_open(MPFILE *file, const char *name, int flags);
 int usqlite_file_close(MPFILE *file);
 int usqlite_file_read(MPFILE *file, void *pBuf, size_t nBuf);

@@ -26,6 +26,7 @@ SOFTWARE.
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "py/objstr.h"
 #include "py/runtime.h"
@@ -252,8 +253,12 @@ static int mpvfsAccess(sqlite3_vfs *vfs, const char *zName, int flags, int *pRes
 //    if (flags == SQLITE_ACCESS_READWRITE) eAccess = R_OK | W_OK;
 //    if (flags == SQLITE_ACCESS_READ)      eAccess = R_OK;
 
-//    rc = access(zPath, eAccess);
-    *pResOut = 0;// (rc == 0);
+    // Answer only the "is this directory writable?" probe used to validate
+    // PRAGMA temp_store_directory. Existence probes stay 0 as before, so SQLite
+    // still creates files as needed and does not attempt hot-journal recovery
+    // -- preserving this port's long-standing behaviour.
+    *pResOut = (flags == SQLITE_ACCESS_READWRITE && usqlite_file_accessible(zName))
+        ? 1 : 0;
 
     return SQLITE_OK;
 }
@@ -262,7 +267,12 @@ static int mpvfsAccess(sqlite3_vfs *vfs, const char *zName, int flags, int *pRes
 static int mpvfsFullPathname(sqlite3_vfs *vfs, const char *zName, int nOut, char *zOut) {
     LOGFUNC;
 
-    strcpy(zOut, zName);
+    if (!zName) {
+        zOut[0] = 0;
+        return SQLITE_OK;
+    }
+    // Names are already absolute here; just copy, bounded by the caller's buffer.
+    snprintf(zOut, nOut, "%s", zName);
 
     return SQLITE_OK;
 }

@@ -61,10 +61,12 @@ static mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
         return mp_const_none;
     }
 
+    // Finalize and free every cursor still holding a statement (close() does
+    // not touch the list, so iterating it here is safe), then empty the list.
     for (size_t i = 0; i < self->cursors.len; i++)
     {
         mp_obj_t cursor = self->cursors.items[i];
-        self->cursors.items[0] = mp_const_none;
+        self->cursors.items[i] = mp_const_none;
         usqlite_cursor_close(cursor);
         #if MICROPY_MALLOC_USES_ALLOCATED_SIZE
         m_free(MP_OBJ_TO_PTR(cursor), sizeof(usqlite_cursor_t));
@@ -72,6 +74,7 @@ static mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
         m_free(MP_OBJ_TO_PTR(cursor));
         #endif
     }
+    self->cursors.len = 0;
 
     usqlite_logprintf(___FUNC___ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
     sqlite3_close(self->db);
