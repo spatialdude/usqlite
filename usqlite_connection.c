@@ -33,11 +33,16 @@ static mp_obj_t usqlite_connection_close(mp_obj_t self_in);
 // ------------------------------------------------------------------------------
 
 static mp_obj_t usqlite_connection_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    usqlite_connection_t *self = m_new_obj(usqlite_connection_t);
+    // Allocated with a finaliser so __del__ really runs when an unclosed
+    // connection is collected (a plain m_new_obj has none, which made the
+    // __del__ below dead code and left the db handle -- page cache and all --
+    // in the SQLite pool for the rest of the session).
+    usqlite_connection_t *self = mp_obj_malloc_with_finaliser(usqlite_connection_t, &usqlite_connection_type);
 
-    self->base.type = &usqlite_connection_type;
     self->db = (sqlite3 *)MP_OBJ_TO_PTR(args[0]);
     self->row_type = MP_QSTR_tuple;
+    self->row_factory = mp_const_none;
+    self->trace_callback = mp_const_none;
     mp_obj_list_init(&self->cursors, 0);
 
     return MP_OBJ_FROM_PTR(self);
@@ -61,20 +66,21 @@ static mp_obj_t usqlite_connection_close(mp_obj_t self_in) {
         return mp_const_none;
     }
 
-    for (size_t i = 0; i < self->cursors.len; i++)
-    {
-        mp_obj_t cursor = self->cursors.items[i];
-        self->cursors.items[0] = mp_const_none;
+    // Finalize the statement of every cursor still tracked. The cursor
+    // objects themselves belong to the GC -- Python code may well still hold
+    // references to them -- so they are never freed here (m_free of a live
+    // object was a use-after-free); the collector reclaims each one once it
+    // goes unreferenced. Drain from the tail, unhooking before closing.
+    while (self->cursors.len) {
+        mp_obj_t cursor = self->cursors.items[--self->cursors.len];
+        ((usqlite_cursor_t *)MP_OBJ_TO_PTR(cursor))->registered = false;
         usqlite_cursor_close(cursor);
-        #if MICROPY_MALLOC_USES_ALLOCATED_SIZE
-        m_free(MP_OBJ_TO_PTR(cursor), sizeof(usqlite_cursor_t));
-        #else
-        m_free(MP_OBJ_TO_PTR(cursor));
-        #endif
     }
 
     usqlite_logprintf(___FUNC___ " closing '%s'\n", sqlite3_db_filename(self->db, NULL));
-    sqlite3_close(self->db);
+    // close_v2: if anything is somehow still unfinalized, the handle becomes a
+    // zombie freed when the last statement goes, instead of leaking outright.
+    sqlite3_close_v2(self->db);
     self->db = NULL;
 
     return mp_const_none;
@@ -169,13 +175,19 @@ static int traceCallback(unsigned uMask, void *context, void *p, void *x) {
     usqlite_connection_t *self = (usqlite_connection_t *)context;
     sqlite3_stmt *stmt = (sqlite3_stmt *)p;
     char *xsql = sqlite3_expanded_sql(stmt);
-    if (xsql) {
-        mp_call_function_1(self->trace_callback, mp_obj_new_str(xsql, strlen(xsql)));
-        sqlite3_free(xsql);
-    } else {
-        const char *sql = sqlite3_sql(stmt);
-        mp_call_function_1(self->trace_callback, mp_obj_new_str(sql, strlen(sql)));
+    const char *sql = xsql ? xsql : sqlite3_sql(stmt);
+
+    // The callback runs from inside sqlite3_step; a raise in user code would
+    // longjmp through the VDBE's C frames (and leak xsql). Swallow it, like
+    // CPython's trace callbacks do.
+    if (sql) {
+        nlr_buf_t nlr;
+        if (nlr_push(&nlr) == 0) {
+            mp_call_function_1(self->trace_callback, mp_obj_new_str(sql, strlen(sql)));
+            nlr_pop();
+        }
     }
+    sqlite3_free(xsql);
 
     return 0;
 }
@@ -208,8 +220,18 @@ void usqlite_connection_register(usqlite_connection_t *connection, mp_obj_t curs
 // ------------------------------------------------------------------------------
 
 void usqlite_connection_deregister(usqlite_connection_t *connection, mp_obj_t cursor) {
-    mp_obj_t cursors = MP_OBJ_FROM_PTR(&connection->cursors);
-    mp_obj_list_remove(cursors, cursor);
+    // Identity swap-remove that never raises: mp_obj_list_remove raises when
+    // the item is absent, and this runs on close/finaliser paths where a raise
+    // must not happen.
+    mp_obj_list_t *l = &connection->cursors;
+    for (size_t i = 0; i < l->len; i++) {
+        if (l->items[i] == cursor) {
+            l->items[i] = l->items[l->len - 1];
+            l->items[l->len - 1] = MP_OBJ_NULL;
+            l->len--;
+            return;
+        }
+    }
 }
 
 // ------------------------------------------------------------------------------

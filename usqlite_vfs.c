@@ -26,11 +26,13 @@ SOFTWARE.
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "py/objstr.h"
 #include "py/runtime.h"
 #include "py/stream.h"
 #include "py/builtin.h"
+#include "py/mphal.h"
 
 // ------------------------------------------------------------------------------
 
@@ -76,10 +78,19 @@ static int mpvfsRead(sqlite3_file *pFile, void *pBuf, int nBuf, sqlite3_int64 of
     }
 
     int size = usqlite_file_read(file, pBuf, nBuf);
+    if (size == nBuf) {
+        return SQLITE_OK;
+    }
 
-    return size == nBuf
-        ? SQLITE_OK
-        : SQLITE_IOERR_SHORT_READ;
+    // VFS contract: on a short read the unread tail MUST be zero-filled.
+    // SQLite relies on this when sizing up a journal or database whose tail
+    // was lost -- exactly the situation crash recovery reads into.
+    if (size < 0) {
+        size = 0;
+    }
+    memset((char *)pBuf + size, 0, nBuf - size);
+
+    return SQLITE_IOERR_SHORT_READ;
 }
 
 // ------------------------------------------------------------------------------
@@ -104,11 +115,18 @@ static int mpvfsWrite(sqlite3_file *pFile, const void *pBuf, int nBuf, sqlite3_i
 static int mpvfsTruncate(sqlite3_file *pFile, sqlite3_int64 size) {
     LOGFUNC;
 
-    #ifdef USQLITE_DEBUG
     MPFILE *file = (MPFILE *)pFile;
 
-    usqlite_logprintf(___FUNC___ "%s\n", file->pathname);
-    #endif
+    // Truncate-to-zero is how SQLite finalizes the rollback journal on every
+    // commit under locking_mode=EXCLUSIVE (the default here); it MUST really
+    // happen, or a later power cut would replay the stale journal over
+    // committed data. MicroPython streams cannot shrink a file to a nonzero
+    // length, so that case (only VACUUM's final shrink of the main database)
+    // stays a no-op: the file keeps stale pages past the page count in the
+    // header, which SQLite ignores -- the file just does not get smaller.
+    if (size == 0) {
+        return usqlite_file_truncate0(file);
+    }
 
     return SQLITE_OK;
 }
@@ -252,8 +270,11 @@ static int mpvfsAccess(sqlite3_vfs *vfs, const char *zName, int flags, int *pRes
 //    if (flags == SQLITE_ACCESS_READWRITE) eAccess = R_OK | W_OK;
 //    if (flags == SQLITE_ACCESS_READ)      eAccess = R_OK;
 
-//    rc = access(zPath, eAccess);
-    *pResOut = 0;// (rc == 0);
+    // Honest answers, including SQLITE_ACCESS_EXISTS: this is what lets the
+    // pager see a hot journal left by a power cut and roll the transaction
+    // back instead of serving a torn database. (Historically this VFS answered
+    // "no" to every existence probe, which silently disabled crash recovery.)
+    *pResOut = usqlite_file_accessible(zName) ? 1 : 0;
 
     return SQLITE_OK;
 }
@@ -262,7 +283,12 @@ static int mpvfsAccess(sqlite3_vfs *vfs, const char *zName, int flags, int *pRes
 static int mpvfsFullPathname(sqlite3_vfs *vfs, const char *zName, int nOut, char *zOut) {
     LOGFUNC;
 
-    strcpy(zOut, zName);
+    if (!zName) {
+        zOut[0] = 0;
+        return SQLITE_OK;
+    }
+    // Names are already absolute here; just copy, bounded by the caller's buffer.
+    snprintf(zOut, nOut, "%s", zName);
 
     return SQLITE_OK;
 }
@@ -281,7 +307,21 @@ static int mpvfsFullPathname(sqlite3_vfs *vfs, const char *zName, int nOut, char
 static int mpvfsRandomness(sqlite3_vfs *pVfs, int nByte, char *zByte) {
     LOGFUNC;
 
-    return SQLITE_OK;
+    // Seed material for SQLite's internal PRNG. It must actually be filled
+    // (this used to return leaving the buffer as stack garbage); xorshift over
+    // the microsecond clock is plenty for what SQLite uses it for.
+    static uint32_t s;
+    if (s == 0) {
+        s = (uint32_t)mp_hal_ticks_us() | 1;
+    }
+    for (int i = 0; i < nByte; i++) {
+        s ^= s << 13;
+        s ^= s >> 17;
+        s ^= s << 5;
+        zByte[i] = (char)s;
+    }
+
+    return nByte;
 }
 
 // ------------------------------------------------------------------------------

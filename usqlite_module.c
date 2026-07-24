@@ -65,12 +65,26 @@ static const mp_rom_obj_tuple_t sqlite_version_info = {
 
 // ------------------------------------------------------------------------------
 
-static void initialize() {
-    static int initialized = 0;
+// Session marker for the one-time engine setup. A C static would survive a
+// soft reset outright; a root pointer keeps the marker GC-visible, but note
+// that root pointers are NOT auto-zeroed on soft reset either -- the module's
+// __init__ (called by the runtime on the first import of each session) clears
+// it, which is what makes each new session re-run the full
+// shutdown / configure / initialize cycle below.
+MP_REGISTER_ROOT_POINTER(void *usqlite_initialized);
 
-    if (initialized) {
+static void initialize() {
+    if (MP_STATE_VM(usqlite_initialized)) {
         return;
     }
+
+    // A previous session may have left the engine initialized with its pool
+    // (and anything PRAGMA temp_store_directory allocated there) inside a heap
+    // that no longer exists; running on would corrupt the new Python heap.
+    // Clear the dangling pointer and shut the engine down cleanly so it can be
+    // reconfigured from scratch. Both are no-ops on a cold start.
+    sqlite3_temp_directory = NULL;
+    sqlite3_shutdown();
 
     usqlite_mem_init();
 
@@ -80,7 +94,7 @@ static void initialize() {
         return;
     }
 
-    initialized = 1;
+    MP_STATE_VM(usqlite_initialized) = (void *)&usqlite_Error;   // any non-NULL tag
 }
 
 // ------------------------------------------------------------------------------
@@ -88,7 +102,20 @@ static void initialize() {
 static mp_obj_t usqlite_init(void) {
     LOGFUNC;
 
-    // initialize();
+    // The runtime calls a builtin module's __init__ on the FIRST import of
+    // each session (the loaded-modules dict is per-session state). Crucially,
+    // root pointers are NOT auto-zeroed across a soft reset on bare-metal
+    // ports -- mp_init() never memsets the VM state -- so this hook is the
+    // one reliable place to forget the previous session's engine state. The
+    // old pool died with the old heap contents; clearing these markers makes
+    // the next connect() re-run the full shutdown/configure/initialize cycle.
+    // (Only the runtime should call this; invoking usqlite.__init__() by hand
+    // mid-session would orphan live connections.)
+    MP_STATE_VM(usqlite_initialized) = NULL;
+    #if defined(SQLITE_ZERO_MALLOC) && defined(SQLITE_ENABLE_MEMSYS5)
+    MP_STATE_VM(usqlite_heap) = NULL;
+    #endif
+    MP_STATE_VM(usqlite_files) = MP_OBJ_NULL;
 
     return mp_const_none;
 }

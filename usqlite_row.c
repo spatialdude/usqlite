@@ -61,7 +61,19 @@ void usqlite_row_type_initialize() {
 // ------------------------------------------------------------------------------
 
 static mp_obj_t keys(usqlite_cursor_t *cursor) {
-    int columns = sqlite3_data_count(cursor->stmt);
+    // Prefer the names cached when the statement was finalized on exhaustion, so
+    // .keys still works on rows from an already-consumed cursor.
+    if (cursor->colnames != MP_OBJ_NULL) {
+        return cursor->colnames;
+    }
+    if (!cursor->stmt) {
+        return mp_obj_new_tuple(0, NULL);
+    }
+
+    // sqlite3_column_count (result column count, stable after prepare), not
+    // sqlite3_data_count (current-row count, 0 once the fetch has stepped past
+    // the row) -- .keys is typically read after the row has been fetched.
+    int columns = sqlite3_column_count(cursor->stmt);
 
     mp_obj_tuple_t *o = MP_OBJ_TO_PTR(mp_obj_new_tuple(columns, NULL));
 
@@ -86,7 +98,9 @@ static void usqlite_row_attr(mp_obj_t self_in, qstr attr, mp_obj_t *dest) {
         switch (attr)
         {
             case MP_QSTR_keys:
-                dest[0] = keys(self->items[self->len]);
+                // The hidden slot holds the cursor object; convert properly
+                // rather than relying on object representation A.
+                dest[0] = keys((usqlite_cursor_t *)MP_OBJ_TO_PTR(self->items[self->len]));
                 break;
         }
     }

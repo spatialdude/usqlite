@@ -157,7 +157,9 @@ mp_obj_t usqlite_column_value(sqlite3_stmt *stmt, int column) {
             return mp_const_none;
 
         case SQLITE_INTEGER:
-            return mp_obj_new_int(sqlite3_column_int(stmt, column));
+            // Full 64-bit read: sqlite3_column_int truncates to 32 bits, which
+            // silently wrapped stored timestamps / large ids.
+            return mp_obj_new_int_from_ll(sqlite3_column_int64(stmt, column));
 
         case SQLITE_FLOAT:
             return mp_obj_new_float((mp_float_t)sqlite3_column_double(stmt, column));
@@ -203,7 +205,12 @@ mp_obj_t usqlite_column_type(sqlite3_stmt *stmt, int column) {
 // ------------------------------------------------------------------------------
 #ifndef SQLITE_OMIT_DECLTYPE
 mp_obj_t usqlite_column_decltype(sqlite3_stmt *stmt, int column) {
+    // NULL for any computed column (COUNT(*), expressions, ...) -- strlen(NULL)
+    // was a hard fault the first time .description met an aggregate.
     const char *type = sqlite3_column_decltype(stmt, column);
+    if (!type) {
+        return mp_const_none;
+    }
 
     return mp_obj_new_str(type, strlen(type));
 }
